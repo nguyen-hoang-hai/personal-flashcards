@@ -7,6 +7,15 @@
     @apply bg-slate-50 text-slate-900 font-sans antialiased;
     -webkit-tap-highlight-color: transparent;
   }
+
+  /* Prevent blinking cursor on non-editable elements (Caret Browsing suppression) */
+  *:not(input):not(textarea):not([contenteditable="true"]) {
+    caret-color: transparent;
+  }
+
+  input, textarea, [contenteditable="true"] {
+    caret-color: auto;
+  }
 }
 
 .kanji-text {
