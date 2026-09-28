@@ -39,17 +39,27 @@ export async function handleLanguageRoutes(
   if (statsMatch && method === 'GET') {
     const lang = statsMatch[1] as Language;
 
-    // Card status breakdown
+    // Vocabulary status breakdown (per vocabulary word)
     const { results: statusCounts } = await env.DB.prepare(
-      `SELECT 
-         COALESCE(ucp.status, 'new') as status,
-         COUNT(sd.id) as count
-       FROM study_directions sd
-       JOIN vocabulary v ON sd.vocabulary_id = v.id
-       JOIN decks d ON v.deck_id = d.id
-       LEFT JOIN user_card_progress ucp ON sd.id = ucp.study_direction_id AND ucp.user_id = ?
-       WHERE v.language = ? AND sd.activation_status = 'active'
-       GROUP BY COALESCE(ucp.status, 'new')`
+      `WITH vocab_status AS (
+         SELECT 
+           v.id,
+           CASE 
+             WHEN MAX(CASE WHEN ucp.status = 'learning' THEN 1 ELSE 0 END) = 1 THEN 'learning'
+             WHEN MAX(CASE WHEN ucp.status = 'review' THEN 1 ELSE 0 END) = 1 THEN 'review'
+             WHEN MIN(CASE WHEN ucp.status = 'mastered' THEN 1 ELSE 0 END) = 1 AND COUNT(ucp.status) = COUNT(sd.id) THEN 'mastered'
+             ELSE 'new'
+           END as status
+         FROM vocabulary v
+         JOIN decks d ON v.deck_id = d.id
+         JOIN study_directions sd ON v.id = sd.vocabulary_id AND sd.activation_status = 'active'
+         LEFT JOIN user_card_progress ucp ON sd.id = ucp.study_direction_id AND ucp.user_id = ?
+         WHERE v.language = ? AND v.is_active = 1
+         GROUP BY v.id
+       )
+       SELECT status, COUNT(*) as count
+       FROM vocab_status
+       GROUP BY status`
     )
       .bind(user.id, lang)
       .all<{ status: string; count: number }>();

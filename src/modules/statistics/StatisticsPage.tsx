@@ -34,7 +34,7 @@ export const StatisticsPage: React.FC = () => {
   }
 
   // Calculate totals
-  const totalCards = (data?.statusDistribution || []).reduce((acc, curr) => acc + curr.count, 0);
+  const totalWords = (data?.statusDistribution || []).reduce((acc, curr) => acc + curr.count, 0);
   const totalReviews = (data?.ratingDistribution || []).reduce((acc, curr) => acc + curr.count, 0);
 
   return (
@@ -49,7 +49,7 @@ export const StatisticsPage: React.FC = () => {
           Thống kê học tập ({isEn ? 'English' : '日本語'})
         </h1>
         <p className="text-slate-500 text-sm mt-1">
-          Quan sát xu hướng ghi nhớ và khối lượng thẻ đã học theo thời gian.
+          Quan sát xu hướng ghi nhớ và khối lượng từ vựng đã học theo thời gian.
         </p>
       </div>
 
@@ -61,14 +61,14 @@ export const StatisticsPage: React.FC = () => {
               <PieChart size={18} className="text-indigo-600" />
               <span>Phân bố trạng thái ghi nhớ</span>
             </h2>
-            <span className="text-xs text-slate-400 font-medium">Tổng {totalCards} thẻ học</span>
+            <span className="text-xs text-slate-400 font-medium">Tổng {totalWords} từ vựng</span>
           </div>
 
           <div className="space-y-3.5">
             {['new', 'learning', 'review', 'mastered'].map((status) => {
               const item = (data?.statusDistribution || []).find((s) => s.status === status);
               const count = item ? item.count : 0;
-              const percent = totalCards > 0 ? Math.round((count / totalCards) * 100) : 0;
+              const percent = totalWords > 0 ? Math.round((count / totalWords) * 100) : 0;
 
               const colors: Record<string, { bg: string; text: string; bar: string; label: string }> = {
                 new: { bg: 'bg-slate-100', text: 'text-slate-700', bar: 'bg-slate-400', label: 'Chưa học (New)' },
