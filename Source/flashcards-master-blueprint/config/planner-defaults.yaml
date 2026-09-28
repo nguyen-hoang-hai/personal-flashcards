@@ -1,0 +1,36 @@
+planner:
+  session_size: 10
+  sibling_gap: 5
+  deck_gap: 1
+
+languages:
+  english:
+    target_minutes: 15
+    maximum_daily_cards: 30
+    maximum_new_vocabulary: 5
+    desired_retention: 0.90
+
+  japanese:
+    target_minutes: 20
+    maximum_daily_cards: 40
+    maximum_new_vocabulary: 5
+    desired_retention: 0.90
+
+backlog:
+  reduce_new_threshold: 30
+  stop_new_threshold: 50
+
+priority:
+  - learning_due
+  - overdue
+  - due_today
+  - new
+
+relearning:
+  again_delay_minutes: 10
+  hard_delay_minutes: 60
+
+initial_time_estimates_seconds:
+  review: 12
+  learning: 18
+  new: 30

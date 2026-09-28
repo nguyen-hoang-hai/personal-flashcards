@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="620" viewBox="0 0 1200 620">
+<style>.t{font:600 22px Arial;fill:#172033}.s{font:16px Arial;fill:#334155}.b{fill:#fff;stroke:#4f46e5;stroke-width:3;rx:18}.db{fill:#ecfeff;stroke:#0891b2;stroke-width:3}.a{stroke:#64748b;stroke-width:3;fill:none;marker-end:url(#m)}.h{font:700 30px Arial;fill:#111827}</style>
+<defs><marker id="m" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#64748b"/></marker></defs>
+<text x="40" y="48" class="h">Personal Flashcards - System Architecture</text>
+<rect x="50" y="235" width="170" height="95" class="b"/><text x="102" y="275" class="t">User</text><text x="72" y="304" class="s">Phone / Laptop</text>
+<rect x="300" y="120" width="220" height="100" class="b"/><text x="340" y="160" class="t">React + Vite</text><text x="335" y="190" class="s">English / Japanese UI</text>
+<rect x="300" y="350" width="220" height="100" class="b"/><text x="335" y="390" class="t">GitHub Repo</text><text x="330" y="420" class="s">Code + Seed CSV</text>
+<rect x="610" y="120" width="220" height="100" class="b"/><text x="646" y="160" class="t">Worker API</text><text x="640" y="190" class="s">Auth / Planner / Import</text>
+<ellipse cx="985" cy="170" rx="150" ry="70" class="db"/><text x="900" y="162" class="t">Cloudflare D1</text><text x="880" y="192" class="s">Vocabulary + Progress</text>
+<rect x="610" y="350" width="220" height="100" class="b"/><text x="653" y="390" class="t">Google Sheets</text><text x="650" y="420" class="s">Prepare Seed Data</text>
+<path d="M220 275 L300 180" class="a"/><path d="M520 170 L610 170" class="a"/><path d="M830 170 L835 170" class="a"/><path d="M520 400 L600 215" class="a"/><path d="M830 400 L900 235" class="a"/><path d="M610 400 L530 400" class="a"/>
+<text x="40" y="565" class="s">GitHub stores code and seed files. D1 stores live vocabulary, study directions, sessions, progress and review history.</text>
+</svg>

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="620" viewBox="0 0 1200 620">
+<style>.h{font:700 30px Arial}.t{font:600 19px Arial}.s{font:16px Arial}.b{fill:#fff;stroke:#2563eb;stroke-width:3;rx:16}.ok{fill:#ecfdf5;stroke:#059669;stroke-width:3;rx:16}.er{fill:#fef2f2;stroke:#dc2626;stroke-width:3;rx:16}.a{stroke:#64748b;stroke-width:3;fill:none;marker-end:url(#m)}</style><defs><marker id="m" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#64748b"/></marker></defs>
+<text x="35" y="45" class="h">Multi-device Sync with Optimistic Versioning</text>
+<rect x="50" y="110" width="190" height="75" class="b"/><text x="110" y="153" class="t">Phone</text>
+<rect x="50" y="345" width="190" height="75" class="b"/><text x="105" y="388" class="t">Laptop</text>
+<rect x="430" y="220" width="220" height="90" class="b"/><text x="485" y="260" class="t">Worker API</text><text x="469" y="287" class="s">Expected version check</text>
+<ellipse cx="970" cy="265" rx="150" ry="75" class="b"/><text x="895" y="260" class="t">D1 Progress</text><text x="920" y="288" class="s">version = 8</text>
+<rect x="760" y="80" width="330" height="70" class="ok"/><text x="790" y="122" class="t">Phone update succeeds: 8 -> 9</text>
+<rect x="760" y="420" width="330" height="70" class="er"/><text x="790" y="448" class="t">Laptop update conflicts</text><text x="805" y="475" class="s">Reload latest progress</text>
+<path d="M240 148 L430 235" class="a"/><path d="M240 382 L430 290" class="a"/><path d="M650 265 L820 265" class="a"/><path d="M930 190 L920 150" class="a"/><path d="M930 340 L920 420" class="a"/>
+</svg>

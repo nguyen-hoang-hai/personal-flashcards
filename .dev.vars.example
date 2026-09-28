@@ -1,0 +1,3 @@
+ALLOWED_EMAIL=hai@example.com
+GOOGLE_CLIENT_ID=
+APP_SECRET=local-development-secret-key-12345

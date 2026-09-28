@@ -1,0 +1,3 @@
+word,pronunciation,meaning_vi,definition_en,example,example_translation,tags,deck,source_type
+circuit breaker,/ˈsɜː.kɪt ˌbreɪ.kər/,máy cắt điện,A device that interrupts an electrical circuit.,The circuit breaker protects the cable.,Máy cắt bảo vệ cáp điện.,"electrical,protection",Electrical Engineering English,seed
+voltage drop,/ˈvəʊl.tɪdʒ drɒp/,sụt áp,A reduction in voltage along a circuit.,The cable length affects voltage drop.,Chiều dài cáp ảnh hưởng đến sụt áp.,"electrical,cable",Electrical Engineering English,seed

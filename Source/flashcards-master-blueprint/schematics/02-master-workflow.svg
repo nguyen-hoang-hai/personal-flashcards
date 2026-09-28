@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="760" viewBox="0 0 1400 760">
+<style>.t{font:600 18px Arial;fill:#172033}.h{font:700 30px Arial}.b{fill:#fff;stroke:#7c3aed;stroke-width:3;rx:16}.g{fill:#ecfdf5;stroke:#059669;stroke-width:3;rx:16}.o{fill:#fff7ed;stroke:#ea580c;stroke-width:3;rx:16}.a{stroke:#64748b;stroke-width:3;fill:none;marker-end:url(#m)}</style>
+<defs><marker id="m" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#64748b"/></marker></defs>
+<text x="35" y="45" class="h">Master Learning Workflow</text>
+<rect x="40" y="100" width="150" height="70" class="b"/><text x="91" y="142" class="t">Login</text>
+<rect x="250" y="100" width="190" height="70" class="b"/><text x="290" y="142" class="t">Language Hub</text>
+<rect x="510" y="55" width="160" height="70" class="g"/><text x="552" y="97" class="t">English</text>
+<rect x="510" y="155" width="160" height="70" class="g"/><text x="542" y="197" class="t">Japanese</text>
+<rect x="740" y="100" width="210" height="80" class="b"/><text x="773" y="135" class="t">Select Active Decks</text><text x="773" y="160" class="t">One or Multiple</text>
+<rect x="1020" y="100" width="230" height="80" class="o"/><text x="1065" y="145" class="t">Daily Planner</text>
+<rect x="1020" y="245" width="230" height="80" class="b"/><text x="1044" y="280" class="t">Due + New Vocabulary</text><text x="1060" y="305" class="t">Active Directions</text>
+<rect x="740" y="245" width="210" height="80" class="b"/><text x="765" y="280" class="t">Controlled Shuffle</text><text x="785" y="305" class="t">Deck + Sibling Gap</text>
+<rect x="470" y="245" width="200" height="80" class="g"/><text x="495" y="280" class="t">Create / Continue</text><text x="520" y="305" class="t">Study Session</text>
+<rect x="210" y="245" width="190" height="80" class="b"/><text x="253" y="280" class="t">Answer Card</text><text x="238" y="305" class="t">with Version</text>
+<rect x="40" y="245" width="120" height="80" class="o"/><text x="66" y="292" class="t">Conflict?</text>
+<rect x="210" y="410" width="190" height="80" class="g"/><text x="235" y="445" class="t">Save Progress</text><text x="243" y="470" class="t">+ Review Log</text>
+<rect x="470" y="410" width="200" height="80" class="b"/><text x="505" y="457" class="t">Statistics Charts</text>
+<rect x="740" y="410" width="210" height="80" class="b"/><text x="770" y="445" class="t">Progressive Unlock</text><text x="786" y="470" class="t">Reverse Cards</text>
+<rect x="1020" y="410" width="230" height="80" class="b"/><text x="1065" y="457" class="t">Data Health</text>
+<path d="M190 135 L250 135" class="a"/><path d="M440 135 L510 90" class="a"/><path d="M440 135 L510 190" class="a"/><path d="M670 90 L740 130" class="a"/><path d="M670 190 L740 150" class="a"/><path d="M950 140 L1020 140" class="a"/><path d="M1135 180 L1135 245" class="a"/><path d="M1020 285 L950 285" class="a"/><path d="M740 285 L670 285" class="a"/><path d="M470 285 L400 285" class="a"/><path d="M210 285 L160 285" class="a"/><path d="M305 325 L305 410" class="a"/><path d="M400 450 L470 450" class="a"/><path d="M400 450 L740 450" class="a"/><path d="M950 450 L1020 450" class="a"/>
+<text x="45" y="355" class="t">If conflict: load latest progress</text>
+</svg>
