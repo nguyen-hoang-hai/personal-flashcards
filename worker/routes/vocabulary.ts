@@ -37,25 +37,28 @@ export async function handleVocabularyRoutes(
 
     const { results } = await env.DB.prepare(sql).bind(...params).all<Vocabulary & { deck_title: string }>();
 
-    // Fetch directions for these words
+    // Fetch directions for these words in chunks to avoid D1 variable limits (max 100)
     const vocabIds = results.map((r: Vocabulary & { deck_title: string }) => r.id);
     let directionsMap: Record<string, StudyDirection[]> = {};
 
     if (vocabIds.length > 0) {
-      const placeholders = vocabIds.map(() => '?').join(',');
-      const dirSql = `
-        SELECT sd.*, ucp.status as progress_status, ucp.repetitions, ucp.interval_days, ucp.due_at, ucp.version
-        FROM study_directions sd
-        LEFT JOIN user_card_progress ucp ON sd.id = ucp.study_direction_id AND ucp.user_id = ?
-        WHERE sd.vocabulary_id IN (${placeholders})
-      `;
-      const { results: dirResults } = await env.DB.prepare(dirSql)
-        .bind(user.id, ...vocabIds)
-        .all<any>();
+      const CHUNK_SIZE = 50;
+      for (let i = 0; i < vocabIds.length; i += CHUNK_SIZE) {
+        const chunk = vocabIds.slice(i, i + CHUNK_SIZE);
+        const placeholders = chunk.map(() => '?').join(',');
+        const dirSql = `
+          SELECT sd.*, ucp.status as progress_status, ucp.repetitions, ucp.interval_days, ucp.due_at, ucp.version
+          FROM study_directions sd
+          LEFT JOIN user_card_progress ucp ON sd.id = ucp.study_direction_id AND ucp.user_id = ?
+          WHERE sd.vocabulary_id IN (${placeholders})
+        `;
+        const { results: dirResults } = await env.DB.prepare(dirSql)
+          .bind(user.id, ...chunk)
+          .all<any>();
 
-      for (const d of dirResults) {
-        if (!directionsMap[d.vocabulary_id]) directionsMap[d.vocabulary_id] = [];
-        directionsMap[d.vocabulary_id].push({
+        for (const d of dirResults) {
+          if (!directionsMap[d.vocabulary_id]) directionsMap[d.vocabulary_id] = [];
+          directionsMap[d.vocabulary_id].push({
           id: d.id,
           vocabulary_id: d.vocabulary_id,
           direction: d.direction,
@@ -87,6 +90,7 @@ export async function handleVocabularyRoutes(
         });
       }
     }
+  }
 
     const enriched = results.map((v: Vocabulary) => ({
       ...v,

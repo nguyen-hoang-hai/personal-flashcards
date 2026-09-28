@@ -29,9 +29,9 @@ export async function handleHealthRoutes(
       FROM vocabulary v
       JOIN decks d ON v.deck_id = d.id
       LEFT JOIN study_directions sd ON v.id = sd.vocabulary_id
-      WHERE d.owner_id = ? AND v.language = ? AND v.is_active = 1
+      WHERE v.language = ? AND v.is_active = 1
     `;
-    const params: any[] = [user.id, language];
+    const params: any[] = [language];
 
     if (deckId) {
       sql += ` AND v.deck_id = ?`;
