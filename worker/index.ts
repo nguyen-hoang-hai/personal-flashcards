@@ -61,7 +61,13 @@ export default {
 
       // Static assets fallback if deployed with assets
       if (env.ASSETS) {
-        return await env.ASSETS.fetch(request);
+        let res = await env.ASSETS.fetch(request);
+        if (res.status === 404 && request.method === 'GET') {
+          // SPA fallback: return index.html for client-side routing
+          const indexUrl = new URL('/index.html', request.url);
+          return await env.ASSETS.fetch(new Request(indexUrl.toString(), request));
+        }
+        return res;
       }
 
       return new Response('Personal Flashcards Worker Running', { status: 200 });
