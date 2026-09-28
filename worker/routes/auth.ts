@@ -25,8 +25,9 @@ export async function handleAuthRoutes(
 
   if (path === '/api/auth/dev-login' && method === 'POST') {
     // Only available in dev or for initial setup
-    const allowedEmail = env.ALLOWED_EMAIL || 'hai@example.com';
-    let user = await env.DB.prepare('SELECT * FROM users WHERE email = ?')
+    const rawAllowed = env.ALLOWED_EMAIL || 'hai@example.com';
+    const allowedEmail = rawAllowed.split(',')[0].trim();
+    let user = await env.DB.prepare('SELECT * FROM users WHERE LOWER(email) = LOWER(?)')
       .bind(allowedEmail)
       .first<User>();
 
