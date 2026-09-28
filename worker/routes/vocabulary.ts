@@ -14,28 +14,44 @@ export async function handleVocabularyRoutes(
     const deckId = url.searchParams.get('deckId');
     const language = url.searchParams.get('language') || 'en';
     const search = url.searchParams.get('search')?.trim().toLowerCase() || '';
+    const page = Math.max(1, parseInt(url.searchParams.get('page') || '1', 10));
+    const limit = Math.min(200, Math.max(10, parseInt(url.searchParams.get('limit') || '200', 10)));
+    const offset = (page - 1) * limit;
 
-    let sql = `
-      SELECT v.*, d.title as deck_title
-      FROM vocabulary v
-      JOIN decks d ON v.deck_id = d.id
-      WHERE v.language = ? AND v.is_active = 1
-    `;
+    let whereClause = ` WHERE v.language = ? AND v.is_active = 1`;
     const params: any[] = [language];
 
     if (deckId) {
-      sql += ` AND v.deck_id = ?`;
+      whereClause += ` AND v.deck_id = ?`;
       params.push(deckId);
     }
 
     if (search) {
-      sql += ` AND (v.word LIKE ? OR v.meaning_vi LIKE ? OR v.reading LIKE ?)`;
+      whereClause += ` AND (v.word LIKE ? OR v.meaning_vi LIKE ? OR v.reading LIKE ?)`;
       params.push(`%${search}%`, `%${search}%`, `%${search}%`);
     }
 
-    sql += ` ORDER BY v.created_at DESC LIMIT 200`;
+    // Total count query
+    const countSql = `
+      SELECT COUNT(DISTINCT v.id) as total
+      FROM vocabulary v
+      JOIN decks d ON v.deck_id = d.id
+      ${whereClause}
+    `;
+    const countResult = await env.DB.prepare(countSql).bind(...params).first<{ total: number }>();
+    const total = countResult?.total || 0;
 
-    const { results } = await env.DB.prepare(sql).bind(...params).all<Vocabulary & { deck_title: string }>();
+    // Data query with ordering by id to preserve lesson sequence
+    const dataSql = `
+      SELECT v.*, d.title as deck_title
+      FROM vocabulary v
+      JOIN decks d ON v.deck_id = d.id
+      ${whereClause}
+      ORDER BY v.id ASC
+      LIMIT ? OFFSET ?
+    `;
+    const dataParams = [...params, limit, offset];
+    const { results } = await env.DB.prepare(dataSql).bind(...dataParams).all<Vocabulary & { deck_title: string }>();
 
     // Fetch directions for these words in chunks to avoid D1 variable limits (max 100)
     const vocabIds = results.map((r: Vocabulary & { deck_title: string }) => r.id);
@@ -97,7 +113,15 @@ export async function handleVocabularyRoutes(
       study_directions: directionsMap[v.id] || [],
     }));
 
-    return Response.json({ vocabulary: enriched });
+    return Response.json({
+      vocabulary: enriched,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.max(1, Math.ceil(total / limit)),
+      },
+    });
   }
 
   // POST /api/vocabulary

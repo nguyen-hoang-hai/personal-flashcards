@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom';
 import { apiFetch } from '../../shared/api/client';
 import { Vocabulary, Deck, Language } from '../../shared/types';
 import { TTSButton } from '../../shared/components/TTSButton';
-import { Plus, Search, Trash2, Loader2, BookOpen, Volume2, UploadCloud, HelpCircle, Lock } from 'lucide-react';
+import { Plus, Search, Trash2, Loader2, BookOpen, Volume2, UploadCloud, HelpCircle, Lock, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const formatDirection = (dir: string) => {
   switch (dir) {
@@ -35,6 +35,21 @@ export const VocabularyPage: React.FC = () => {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
 
+  // Pagination State (Default 200 items per page)
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(200);
+  const [pagination, setPagination] = useState<{
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  }>({
+    page: 1,
+    limit: 200,
+    total: 0,
+    totalPages: 1,
+  });
+
   // Single Modal State
   const [showModal, setShowModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -57,18 +72,28 @@ export const VocabularyPage: React.FC = () => {
   const isEn = language === 'en';
   const themeColor = isEn ? 'indigo' : 'rose';
 
-  const loadData = async () => {
+  const loadData = async (targetPage = currentPage, targetLimit = pageSize) => {
     try {
       setLoading(true);
       const [vocabData, decksData] = await Promise.all([
         apiFetch(
-          `/api/vocabulary?language=${language}${selectedDeckId ? `&deckId=${selectedDeckId}` : ''}${
+          `/api/vocabulary?language=${language}&page=${targetPage}&limit=${targetLimit}${selectedDeckId ? `&deckId=${selectedDeckId}` : ''}${
             search ? `&search=${encodeURIComponent(search)}` : ''
           }`
         ),
         apiFetch(`/api/decks?language=${language}`),
       ]);
       setVocabulary(vocabData.vocabulary || []);
+      if (vocabData.pagination) {
+        setPagination(vocabData.pagination);
+      } else {
+        setPagination({
+          page: targetPage,
+          limit: targetLimit,
+          total: vocabData.vocabulary?.length || 0,
+          totalPages: 1,
+        });
+      }
       setDecks(decksData.decks || []);
       if (!formDeckId && decksData.decks && decksData.decks.length > 0) {
         setFormDeckId(decksData.decks[0].id);
@@ -81,12 +106,27 @@ export const VocabularyPage: React.FC = () => {
   };
 
   useEffect(() => {
-    loadData();
+    setCurrentPage(1);
+    loadData(1, pageSize);
   }, [language, selectedDeckId]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    loadData();
+    setCurrentPage(1);
+    loadData(1, pageSize);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage < 1 || newPage > pagination.totalPages || newPage === currentPage) return;
+    setCurrentPage(newPage);
+    loadData(newPage, pageSize);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handlePageSizeChange = (newSize: number) => {
+    setPageSize(newSize);
+    setCurrentPage(1);
+    loadData(1, newSize);
   };
 
   const handleOpenAdd = () => {
@@ -224,8 +264,14 @@ export const VocabularyPage: React.FC = () => {
             <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
               Kho từ vựng ({isEn ? 'English' : '日本語'})
             </h1>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/60">
-              {vocabulary.length} từ
+            <span
+              className={`px-3 py-1 rounded-full text-xs font-extrabold border shadow-2xs ${
+                isEn
+                  ? 'bg-indigo-50 text-indigo-700 border-indigo-200/60'
+                  : 'bg-rose-50 text-rose-700 border-rose-200/60'
+              }`}
+            >
+              Tổng {pagination.total} từ
             </span>
           </div>
           <p className="text-slate-500 text-sm mt-1">
@@ -422,6 +468,99 @@ export const VocabularyPage: React.FC = () => {
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {/* Pagination Controls */}
+      {!loading && pagination.total > 0 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 p-4 bg-white rounded-3xl border border-slate-200/90 shadow-xs">
+          <div className="text-xs text-slate-500 font-medium">
+            Hiển thị{' '}
+            <span className="font-bold text-slate-800">
+              {(currentPage - 1) * pageSize + 1}
+            </span>{' '}
+            -{' '}
+            <span className="font-bold text-slate-800">
+              {Math.min(currentPage * pageSize, pagination.total)}
+            </span>{' '}
+            trên{' '}
+            <span className="font-bold text-slate-900">{pagination.total}</span> từ vựng
+          </div>
+
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 transition-all"
+            >
+              <ChevronLeft size={15} />
+              <span>Trước</span>
+            </button>
+
+            <div className="flex items-center gap-1 px-1">
+              {(() => {
+                const totalPages = pagination.totalPages;
+                let pages: (number | string)[] = [];
+                if (totalPages <= 7) {
+                  pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+                } else if (currentPage <= 4) {
+                  pages = [1, 2, 3, 4, 5, '...', totalPages];
+                } else if (currentPage >= totalPages - 3) {
+                  pages = [1, '...', totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+                } else {
+                  pages = [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages];
+                }
+
+                return pages.map((p, idx) => {
+                  if (p === '...') {
+                    return (
+                      <span key={`dots-${idx}`} className="px-1.5 text-slate-400 text-xs font-bold">
+                        ...
+                      </span>
+                    );
+                  }
+                  const isActive = p === currentPage;
+                  return (
+                    <button
+                      key={p}
+                      onClick={() => handlePageChange(p as number)}
+                      className={`min-w-8 h-8 px-2 rounded-xl text-xs font-bold transition-all ${
+                        isActive
+                          ? isEn
+                            ? 'bg-indigo-600 text-white shadow-xs'
+                            : 'bg-rose-600 text-white shadow-xs'
+                          : 'text-slate-600 hover:bg-slate-100 border border-transparent'
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  );
+                });
+              })()}
+            </div>
+
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === pagination.totalPages}
+              className="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 transition-all"
+            >
+              <span>Sau</span>
+              <ChevronRight size={15} />
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2 text-xs text-slate-500">
+            <span>Mỗi trang:</span>
+            <select
+              value={pageSize}
+              onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+              className="px-2.5 py-1.5 rounded-xl border border-slate-200 bg-white font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 shadow-xs cursor-pointer"
+            >
+              <option value={50}>50 từ / trang</option>
+              <option value={100}>100 từ / trang</option>
+              <option value={200}>200 từ / trang</option>
+            </select>
           </div>
         </div>
       )}
