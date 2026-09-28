@@ -10,9 +10,9 @@ binding = "ASSETS"
 [[d1_databases]]
 binding = "DB"
 database_name = "flashcards-db"
-database_id = "00000000-0000-0000-0000-000000000000"
+database_id = "80c078dc-4451-4e31-8752-d50de062f827"
 migrations_dir = "migrations"
 
 [vars]
-ALLOWED_EMAIL = "hai@example.com"
-APP_ENV = "development"
+ALLOWED_EMAIL = "2412nguyenhoanghai@gmail.com, hai@example.com"
+APP_ENV = "production"

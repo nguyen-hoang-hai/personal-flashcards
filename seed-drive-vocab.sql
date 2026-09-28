@@ -1,3 +1,8 @@
+-- Ensure User Exists
+INSERT OR IGNORE INTO users (id, email, display_name)
+VALUES 
+  ('ed0f5e54-8832-4b8b-91e7-c55628f69004', '2412nguyenhoanghai@gmail.com', 'Hai');
+
 -- Create Decks
 INSERT OR IGNORE INTO decks (id, owner_id, language, title, description, source_type)
 VALUES 
