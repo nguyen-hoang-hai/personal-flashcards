@@ -4,6 +4,7 @@ import { apiFetch } from '../../shared/api/client';
 import { Language, StudySession, StudySessionCard, Rating } from '../../shared/types';
 import { TTSButton } from '../../shared/components/TTSButton';
 import { speakText } from '../../shared/utils/tts';
+import { QuizCard } from './QuizCard';
 import {
   X,
   Volume2,
@@ -14,6 +15,7 @@ import {
   ChevronRight,
   Loader2,
 } from 'lucide-react';
+
 
 export const StudyPage: React.FC = () => {
   const { lang } = useParams<{ lang: Language }>();
@@ -30,8 +32,18 @@ export const StudyPage: React.FC = () => {
   const [autoTTS, setAutoTTS] = useState(true);
   const [conflictToast, setConflictToast] = useState<string | null>(null);
 
+  // Read study mode from sessionStorage (set by Dashboard when starting session)
+  const [studyMode] = useState<'flashcard' | 'quiz'>(() => {
+    try {
+      return (sessionStorage.getItem(`studyMode_${language}`) as 'flashcard' | 'quiz') || 'flashcard';
+    } catch {
+      return 'flashcard';
+    }
+  });
+
   const isEn = language === 'en';
   const themeColor = isEn ? 'indigo' : 'rose';
+
 
   // Load active session
   useEffect(() => {
@@ -247,129 +259,141 @@ export const StudyPage: React.FC = () => {
         </div>
       )}
 
-      {/* Central 3D Flip Flashcard */}
+      {/* Central Card Area */}
       <main className="max-w-2xl mx-auto w-full px-4 py-4 sm:py-6 flex-1 flex flex-col justify-center z-10">
-        <div
-          key={`card-wrapper-${currentIndex}`}
-          className="perspective-1000 w-full min-h-[450px] sm:min-h-[490px] animate-card-enter"
-        >
+        {studyMode === 'quiz' ? (
+          <div key={`quiz-wrapper-${currentIndex}`} className="animate-card-enter w-full">
+            <QuizCard
+              card={currentCard}
+              language={language}
+              onAnswer={handleAnswer}
+              answering={answering}
+            />
+          </div>
+        ) : (
           <div
-            onClick={handleFlip}
-            className={`relative w-full h-full min-h-[450px] sm:min-h-[490px] rounded-3xl transition-transform duration-500 transform-style-3d cursor-pointer ${
-              isFlipped ? 'rotate-y-180' : ''
-            }`}
+            key={`card-wrapper-${currentIndex}`}
+            className="perspective-1000 w-full min-h-[450px] sm:min-h-[490px] animate-card-enter"
           >
-            {/* FRONT FACE */}
-            <div className="absolute inset-0 backface-hidden bg-gradient-to-b from-slate-850 to-slate-900 border border-slate-700/80 rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col justify-between hover:border-slate-600 transition-colors">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] uppercase tracking-wider font-semibold text-slate-400 bg-slate-800/80 px-3 py-1 rounded-lg border border-slate-700/50">
-                  {currentCard.direction === 'en_to_vi'
-                    ? 'English ➔ Nghĩa'
-                    : currentCard.direction === 'vi_to_en'
-                    ? 'Nghĩa ➔ English'
-                    : currentCard.direction === 'ja_to_vi'
-                    ? 'Kanji ➔ Nghĩa'
-                    : currentCard.direction === 'ja_to_reading'
-                    ? 'Kanji ➔ Cách đọc'
-                    : 'Thẻ từ vựng'}
-                </span>
+            <div
+              onClick={handleFlip}
+              className={`relative w-full h-full min-h-[450px] sm:min-h-[490px] rounded-3xl transition-transform duration-500 transform-style-3d cursor-pointer ${
+                isFlipped ? 'rotate-y-180' : ''
+              }`}
+            >
+              {/* FRONT FACE */}
+              <div className="absolute inset-0 backface-hidden bg-gradient-to-b from-slate-850 to-slate-900 border border-slate-700/80 rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col justify-between hover:border-slate-600 transition-colors">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] uppercase tracking-wider font-semibold text-slate-400 bg-slate-800/80 px-3 py-1 rounded-lg border border-slate-700/50">
+                    {currentCard.direction === 'en_to_vi'
+                      ? 'English ➔ Nghĩa'
+                      : currentCard.direction === 'vi_to_en'
+                      ? 'Nghĩa ➔ English'
+                      : currentCard.direction === 'ja_to_vi'
+                      ? 'Kanji ➔ Nghĩa'
+                      : currentCard.direction === 'ja_to_reading'
+                      ? 'Kanji ➔ Cách đọc'
+                      : 'Thẻ từ vựng'}
+                  </span>
 
-                <TTSButton
-                  text={language === 'ja' && currentCard.reading ? currentCard.reading : currentCard.word}
-                  language={language}
-                  className="text-slate-400 hover:text-white hover:bg-slate-700/80"
-                  size={22}
-                />
-              </div>
-
-              {/* Word Display */}
-              <div className="text-center py-6">
-                <div
-                  className={`font-black text-white tracking-tight ${
-                    language === 'ja'
-                      ? 'kanji-text text-5xl sm:text-7xl leading-tight'
-                      : 'text-4xl sm:text-6xl font-extrabold'
-                  }`}
-                >
-                  {currentCard.word}
+                  <TTSButton
+                    text={language === 'ja' && currentCard.reading ? currentCard.reading : currentCard.word}
+                    language={language}
+                    className="text-slate-400 hover:text-white hover:bg-slate-700/80"
+                    size={22}
+                  />
                 </div>
-              </div>
 
-              <div className="text-center text-xs text-slate-500 font-medium flex items-center justify-center gap-1.5">
-                <span>Chạm hoặc bấm</span>
-                <kbd className="px-2 py-0.5 bg-slate-800 text-slate-300 rounded-md font-mono text-[11px] border border-slate-700">
-                  Space
-                </kbd>
-                <span>để lật đáp án</span>
-              </div>
-            </div>
-
-            {/* BACK FACE */}
-            <div className="absolute inset-0 backface-hidden rotate-y-180 bg-gradient-to-b from-slate-850 to-slate-900 border border-slate-700/90 rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col justify-between overflow-y-auto no-scrollbar">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                <span className="text-[11px] uppercase tracking-wider font-semibold text-emerald-400 bg-emerald-950/60 px-3 py-1 rounded-lg border border-emerald-800/40">
-                  Đáp án & Giải nghĩa
-                </span>
-
-                <TTSButton
-                  text={language === 'ja' && currentCard.reading ? currentCard.reading : currentCard.word}
-                  language={language}
-                  className="text-slate-400 hover:text-white hover:bg-slate-700/80"
-                  size={22}
-                />
-              </div>
-
-              {/* Back Content */}
-              <div className="py-2 space-y-3 text-left">
-                {/* Word & Reading header */}
-                <div>
+                {/* Word Display */}
+                <div className="text-center py-6">
                   <div
-                    className={`font-bold text-white text-2xl sm:text-3xl ${
-                      language === 'ja' ? 'kanji-text' : ''
+                    className={`font-black text-white tracking-tight ${
+                      language === 'ja'
+                        ? 'kanji-text text-5xl sm:text-7xl leading-tight'
+                        : 'text-4xl sm:text-6xl font-extrabold'
                     }`}
                   >
                     {currentCard.word}
                   </div>
-                  {language === 'ja' && currentCard.reading && (
-                    <div className="text-rose-400 text-base sm:text-lg font-medium kanji-text mt-0.5">
-                      【{currentCard.reading}】
-                    </div>
-                  )}
-                  {language === 'en' && currentCard.pronunciation && (
-                    <div className="text-indigo-400 text-sm font-mono mt-0.5">
-                      {currentCard.pronunciation}
-                    </div>
-                  )}
                 </div>
 
-                {/* Meaning */}
-                <div className="bg-slate-800/60 p-3.5 sm:p-4 rounded-2xl border border-slate-700/50">
-                  <div className="text-xs text-slate-400 font-semibold mb-0.5">Nghĩa tiếng Việt</div>
-                  <div className="text-xl sm:text-2xl font-extrabold text-white">
-                    {currentCard.meaning_vi}
-                  </div>
+                <div className="text-center text-xs text-slate-500 font-medium flex items-center justify-center gap-1.5">
+                  <span>Chạm hoặc bấm</span>
+                  <kbd className="px-2 py-0.5 bg-slate-800 text-slate-300 rounded-md font-mono text-[11px] border border-slate-700">
+                    Space
+                  </kbd>
+                  <span>để lật đáp án</span>
                 </div>
-
-                {/* Example sentence */}
-                {currentCard.example && (
-                  <div className="bg-slate-900/80 p-3 rounded-2xl border border-slate-800 space-y-1">
-                    <div className="text-sm text-slate-200">{currentCard.example}</div>
-                    {currentCard.example_translation && (
-                      <div className="text-xs text-slate-400">{currentCard.example_translation}</div>
-                    )}
-                  </div>
-                )}
               </div>
 
-              <div className="text-center text-xs text-slate-500 font-medium pt-1">
-                Chọn mức độ ghi nhớ bên dưới để tiếp tục
+              {/* BACK FACE */}
+              <div className="absolute inset-0 backface-hidden rotate-y-180 bg-gradient-to-b from-slate-850 to-slate-900 border border-slate-700/90 rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col justify-between overflow-y-auto no-scrollbar">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                  <span className="text-[11px] uppercase tracking-wider font-semibold text-emerald-400 bg-emerald-950/60 px-3 py-1 rounded-lg border border-emerald-800/40">
+                    Đáp án & Giải nghĩa
+                  </span>
+
+                  <TTSButton
+                    text={language === 'ja' && currentCard.reading ? currentCard.reading : currentCard.word}
+                    language={language}
+                    className="text-slate-400 hover:text-white hover:bg-slate-700/80"
+                    size={22}
+                  />
+                </div>
+
+                {/* Back Content */}
+                <div className="py-2 space-y-3 text-left">
+                  {/* Word & Reading header */}
+                  <div>
+                    <div
+                      className={`font-bold text-white text-2xl sm:text-3xl ${
+                        language === 'ja' ? 'kanji-text' : ''
+                      }`}
+                    >
+                      {currentCard.word}
+                    </div>
+                    {language === 'ja' && currentCard.reading && (
+                      <div className="text-rose-400 text-base sm:text-lg font-medium kanji-text mt-0.5">
+                        【{currentCard.reading}】
+                      </div>
+                    )}
+                    {language === 'en' && currentCard.pronunciation && (
+                      <div className="text-indigo-400 text-sm font-mono mt-0.5">
+                        {currentCard.pronunciation}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Meaning */}
+                  <div className="bg-slate-800/60 p-3.5 sm:p-4 rounded-2xl border border-slate-700/50">
+                    <div className="text-xs text-slate-400 font-semibold mb-0.5">Nghĩa tiếng Việt</div>
+                    <div className="text-xl sm:text-2xl font-extrabold text-white">
+                      {currentCard.meaning_vi}
+                    </div>
+                  </div>
+
+                  {/* Example sentence */}
+                  {currentCard.example && (
+                    <div className="bg-slate-900/80 p-3 rounded-2xl border border-slate-800 space-y-1">
+                      <div className="text-sm text-slate-200">{currentCard.example}</div>
+                      {currentCard.example_translation && (
+                        <div className="text-xs text-slate-400">{currentCard.example_translation}</div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div className="text-center text-xs text-slate-500 font-medium pt-1">
+                  Chọn mức độ ghi nhớ bên dưới để tiếp tục
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
       </main>
 
-      {/* Bottom Action Rating Bar */}
+      {/* Bottom Action Rating Bar — only shown in flashcard mode */}
+      {studyMode !== 'quiz' && (
       <footer className="max-w-2xl mx-auto w-full px-4 pb-6 sm:pb-8 z-10">
         {!isFlipped ? (
           <button
@@ -445,7 +469,9 @@ export const StudyPage: React.FC = () => {
             </button>
           </div>
         )}
+
       </footer>
+      )}
     </div>
   );
 };

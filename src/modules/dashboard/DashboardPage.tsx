@@ -13,7 +13,9 @@ import {
   Eye,
   EyeOff,
   Check,
+  HelpCircle,
 } from 'lucide-react';
+
 
 export const DashboardPage: React.FC = () => {
   const { lang } = useParams<{ lang: Language }>();
@@ -71,7 +73,7 @@ export const DashboardPage: React.FC = () => {
     setSelectedDeckIds([]);
   };
 
-  const handleStartSession = async (size: number = 10, mode: 'standard' | 'cram' = 'standard') => {
+  const handleStartSession = async (size: number = 10, mode: 'standard' | 'cram' = 'standard', studyMode: 'flashcard' | 'quiz' = 'flashcard') => {
     if (selectedDeckIds.length === 0) {
       alert('Vui lòng chọn ít nhất 1 bộ thẻ (deck) để bắt đầu học.');
       return;
@@ -80,6 +82,12 @@ export const DashboardPage: React.FC = () => {
     try {
       setStartingSession(true);
       setError(null);
+
+      // Save study mode to sessionStorage so StudyPage can read it
+      try {
+        sessionStorage.setItem(`studyMode_${language}`, studyMode);
+      } catch {}
+
       const res = await apiFetch('/api/study/session/start', {
         method: 'POST',
         body: JSON.stringify({
@@ -102,6 +110,7 @@ export const DashboardPage: React.FC = () => {
       setStartingSession(false);
     }
   };
+
 
   const handleToggleDeckVisibility = async (deck: Deck, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -172,21 +181,32 @@ export const DashboardPage: React.FC = () => {
           </div>
 
           {/* Quick Action Study Buttons */}
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             {isAllDone ? (
-              <button
-                onClick={() => handleStartSession(10, 'cram')}
-                disabled={startingSession}
-                className="px-6 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold shadow-md shadow-emerald-600/25 transition-all flex items-center gap-2"
-                title="Ôn tập tự do các thẻ đã học bất cứ lúc nào"
-              >
-                <Sparkles size={18} />
-                <span>Luyện tập tự do (Cram)</span>
-              </button>
+              <>
+                <button
+                  onClick={() => handleStartSession(10, 'cram', 'flashcard')}
+                  disabled={startingSession}
+                  className="px-6 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold shadow-md shadow-emerald-600/25 transition-all flex items-center gap-2"
+                  title="Ôn tập tự do các thẻ đã học bất cứ lúc nào"
+                >
+                  <Sparkles size={18} />
+                  <span>Luyện tập tự do (Cram)</span>
+                </button>
+                <button
+                  onClick={() => handleStartSession(10, 'cram', 'quiz')}
+                  disabled={startingSession}
+                  className="px-5 py-3.5 rounded-2xl bg-violet-600 hover:bg-violet-700 active:scale-95 text-white font-bold shadow-md shadow-violet-600/25 transition-all flex items-center gap-2"
+                  title="Luyện tập dạng trắc nghiệm 4 đáp án"
+                >
+                  <HelpCircle size={18} />
+                  <span>Trắc nghiệm</span>
+                </button>
+              </>
             ) : (
               <>
                 <button
-                  onClick={() => handleStartSession(10, 'standard')}
+                  onClick={() => handleStartSession(10, 'standard', 'flashcard')}
                   disabled={startingSession}
                   className={`px-6 py-3.5 rounded-2xl text-white font-bold shadow-md hover:shadow-lg active:scale-95 transition-all flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed ${
                     isEn
@@ -198,7 +218,16 @@ export const DashboardPage: React.FC = () => {
                   <span>Học 10 thẻ (Quick)</span>
                 </button>
                 <button
-                  onClick={() => handleStartSession(20, 'standard')}
+                  onClick={() => handleStartSession(10, 'standard', 'quiz')}
+                  disabled={startingSession}
+                  className="px-5 py-3.5 rounded-2xl bg-violet-600 hover:bg-violet-700 active:scale-95 text-white font-bold shadow-md shadow-violet-600/25 transition-all flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                  title="Ôn tập dạng trắc nghiệm 4 đáp án"
+                >
+                  <HelpCircle size={18} />
+                  <span>Trắc nghiệm</span>
+                </button>
+                <button
+                  onClick={() => handleStartSession(20, 'standard', 'flashcard')}
                   disabled={startingSession}
                   className="px-4 py-3.5 rounded-2xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 font-semibold text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                 >
@@ -207,6 +236,7 @@ export const DashboardPage: React.FC = () => {
               </>
             )}
           </div>
+
         </div>
 
         {/* Counter Pills */}

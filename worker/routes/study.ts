@@ -389,6 +389,74 @@ export async function handleStudyRoutes(
     return Response.json({ success: true });
   }
 
+  // GET /api/study/quiz-options?studyDirectionId=...&language=en
+  if (path === '/api/study/quiz-options' && method === 'GET') {
+    const directionId = url.searchParams.get('studyDirectionId');
+    const lang = url.searchParams.get('language') || 'en';
+
+    if (!directionId) {
+      return Response.json({ error: 'studyDirectionId required' }, { status: 400 });
+    }
+
+    // Get the correct vocabulary for this direction
+    const correct = await env.DB.prepare(
+      `SELECT v.id, v.word, v.meaning_vi, v.reading, v.pronunciation, sd.direction
+       FROM study_directions sd
+       JOIN vocabulary v ON sd.vocabulary_id = v.id
+       WHERE sd.id = ?`
+    )
+      .bind(directionId)
+      .first<any>();
+
+    if (!correct) {
+      return Response.json({ error: 'Direction not found' }, { status: 404 });
+    }
+
+    // Fetch random distractors from the same language (exclude the correct word)
+    const { results: distractors } = await env.DB.prepare(
+      `SELECT v.id, v.word, v.meaning_vi, v.reading, v.pronunciation
+       FROM vocabulary v
+       WHERE v.language = ? AND v.id != ? AND v.is_active = 1
+       ORDER BY RANDOM() LIMIT 3`
+    )
+      .bind(lang, correct.id)
+      .all<any>();
+
+    // Build 4 options with correct answer mixed in
+    const correctOption = {
+      id: correct.id,
+      word: correct.word,
+      meaning_vi: correct.meaning_vi,
+      reading: correct.reading,
+      pronunciation: correct.pronunciation,
+      isCorrect: true,
+    };
+
+    const options = [
+      correctOption,
+      ...distractors.map((d: any) => ({
+        id: d.id,
+        word: d.word,
+        meaning_vi: d.meaning_vi,
+        reading: d.reading,
+        pronunciation: d.pronunciation,
+        isCorrect: false,
+      })),
+    ];
+
+    // Shuffle options
+    for (let i = options.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [options[i], options[j]] = [options[j], options[i]];
+    }
+
+    return Response.json({
+      direction: correct.direction,
+      correct: correctOption,
+      options,
+    });
+  }
+
   return Response.json({ error: 'Not Found' }, { status: 404 });
 }
 
