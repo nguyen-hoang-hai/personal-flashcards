@@ -29,6 +29,46 @@ export async function handleAuthRoutes(
     return Response.json({ user });
   }
 
+  if (path === '/api/auth/login' && method === 'POST') {
+    const body = (await request.json()) as { email?: string; name?: string };
+    const email = (body.email || '').trim().toLowerCase();
+
+    if (!email || !email.includes('@')) {
+      return Response.json({ error: 'Vui lòng nhập địa chỉ email hợp lệ' }, { status: 400 });
+    }
+
+    let user = await env.DB.prepare('SELECT * FROM users WHERE LOWER(email) = LOWER(?)')
+      .bind(email)
+      .first<User>();
+
+    if (!user) {
+      const id = crypto.randomUUID();
+      const displayName = body.name || email.split('@')[0];
+      await env.DB.prepare(
+        'INSERT INTO users (id, email, display_name) VALUES (?, ?, ?)'
+      )
+        .bind(id, email, displayName)
+        .run();
+
+      user = {
+        id,
+        email,
+        display_name: displayName,
+        created_at: new Date().toISOString(),
+        last_login_at: null,
+      };
+    }
+
+    const { cookie } = await createSession(user.id, env, request);
+    return new Response(JSON.stringify({ success: true, user }), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Set-Cookie': cookie,
+      },
+    });
+  }
+
   if (path === '/api/auth/dev-login' && method === 'POST') {
     // Only available in dev or for initial setup
     const rawAllowed = env.ALLOWED_EMAIL || 'hai@example.com';

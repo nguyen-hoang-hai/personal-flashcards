@@ -51,7 +51,7 @@ export const AccountPage: React.FC = () => {
             <UserIcon size={28} />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-slate-900">{user?.display_name || 'Chủ sở hữu'}</h2>
+            <h2 className="text-lg font-bold text-slate-900">{user?.display_name || user?.email?.split('@')[0] || 'Người học'}</h2>
             <p className="text-slate-500 text-xs">{user?.email}</p>
           </div>
         </div>
@@ -72,7 +72,7 @@ export const AccountPage: React.FC = () => {
             <span className="text-slate-500">Cơ sở dữ liệu</span>
             <span className="inline-flex items-center gap-1 text-indigo-600 font-semibold">
               <Database size={16} />
-              <span>Cloudflare D1 (Local SQLite Emulation)</span>
+              <span>Cloudflare D1 (Serverless Database)</span>
             </span>
           </div>
         </div>
