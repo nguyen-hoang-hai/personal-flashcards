@@ -48,10 +48,10 @@ export async function handleLanguageRoutes(
        JOIN vocabulary v ON sd.vocabulary_id = v.id
        JOIN decks d ON v.deck_id = d.id
        LEFT JOIN user_card_progress ucp ON sd.id = ucp.study_direction_id AND ucp.user_id = ?
-       WHERE d.owner_id = ? AND v.language = ? AND sd.activation_status = 'active'
+       WHERE v.language = ? AND sd.activation_status = 'active'
        GROUP BY COALESCE(ucp.status, 'new')`
     )
-      .bind(user.id, user.id, lang)
+      .bind(user.id, lang)
       .all<{ status: string; count: number }>();
 
     // Ratings breakdown
@@ -102,12 +102,13 @@ async function getLanguageSummary(env: Env, userId: string, language: Language) 
      FROM study_directions sd
      JOIN vocabulary v ON sd.vocabulary_id = v.id AND v.is_active = 1
      JOIN decks d ON v.deck_id = d.id
-     JOIN user_deck_settings uds ON d.id = uds.deck_id AND uds.user_id = ? AND uds.study_status = 'active'
+     LEFT JOIN user_deck_settings uds ON d.id = uds.deck_id AND uds.user_id = ?
      LEFT JOIN user_card_progress ucp ON sd.id = ucp.study_direction_id AND ucp.user_id = ?
-     WHERE d.owner_id = ? AND v.language = ? AND sd.activation_status = 'active'
+     WHERE v.language = ? AND sd.activation_status = 'active'
+       AND COALESCE(uds.study_status, 'active') = 'active'
        AND ucp.status IN ('learning', 'review', 'mastered') AND ucp.due_at <= ?`
   )
-    .bind(userId, userId, userId, language, now)
+    .bind(userId, userId, language, now)
     .first<{ count: number }>();
 
   // Available new vocabulary count
@@ -115,12 +116,14 @@ async function getLanguageSummary(env: Env, userId: string, language: Language) 
     `SELECT COUNT(DISTINCT v.id) as count
      FROM vocabulary v
      JOIN decks d ON v.deck_id = d.id
-     JOIN user_deck_settings uds ON d.id = uds.deck_id AND uds.user_id = ? AND uds.study_status = 'active'
+     LEFT JOIN user_deck_settings uds ON d.id = uds.deck_id AND uds.user_id = ?
      JOIN study_directions sd ON v.id = sd.vocabulary_id AND sd.activation_status = 'active'
      LEFT JOIN user_card_progress ucp ON sd.id = ucp.study_direction_id AND ucp.user_id = ?
-     WHERE d.owner_id = ? AND v.language = ? AND (ucp.status = 'new' OR ucp.status IS NULL)`
+     WHERE v.language = ?
+       AND COALESCE(uds.study_status, 'active') = 'active'
+       AND (ucp.status = 'new' OR ucp.status IS NULL)`
   )
-    .bind(userId, userId, userId, language)
+    .bind(userId, userId, language)
     .first<{ count: number }>();
 
   // Completed sessions today
@@ -134,9 +137,9 @@ async function getLanguageSummary(env: Env, userId: string, language: Language) 
 
   // Total decks
   const decksResult = await env.DB.prepare(
-    `SELECT COUNT(id) as count FROM decks WHERE owner_id = ? AND language = ?`
+    `SELECT COUNT(id) as count FROM decks WHERE language = ?`
   )
-    .bind(userId, language)
+    .bind(language)
     .first<{ count: number }>();
 
   return {

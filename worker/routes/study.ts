@@ -48,10 +48,10 @@ export async function handleStudyRoutes(
     if (!deckIds || deckIds.length === 0) {
       const { results } = await env.DB.prepare(
         `SELECT d.id FROM decks d
-         JOIN user_deck_settings uds ON d.id = uds.deck_id AND uds.user_id = ?
-         WHERE d.owner_id = ? AND d.language = ? AND uds.study_status = 'active'`
+         LEFT JOIN user_deck_settings uds ON d.id = uds.deck_id AND uds.user_id = ?
+         WHERE d.language = ? AND COALESCE(uds.study_status, 'active') = 'active'`
       )
-        .bind(user.id, user.id, lang)
+        .bind(user.id, lang)
         .all<{ id: string }>();
 
       deckIds = results.map((r: { id: string }) => r.id);
@@ -94,11 +94,11 @@ export async function handleStudyRoutes(
       JOIN vocabulary v ON sd.vocabulary_id = v.id AND v.is_active = 1
       JOIN decks d ON v.deck_id = d.id
       LEFT JOIN user_card_progress ucp ON sd.id = ucp.study_direction_id AND ucp.user_id = ?
-      WHERE d.owner_id = ? AND v.language = ? AND sd.activation_status = 'active'
+      WHERE v.language = ? AND sd.activation_status = 'active'
     `;
 
     const { results } = await env.DB.prepare(query)
-      .bind(user.id, user.id, lang)
+      .bind(user.id, lang)
       .all<CandidateCard>();
 
     const plannedQueue = buildStudyPlan(results, deckIds, {

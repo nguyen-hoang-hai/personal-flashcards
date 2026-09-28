@@ -15,6 +15,12 @@ export async function handleAuthRoutes(
   const method = request.method;
   const path = url.pathname;
 
+  if (path === '/api/auth/config' && method === 'GET') {
+    return Response.json({
+      googleClientId: env.GOOGLE_CLIENT_ID || '',
+    });
+  }
+
   if (path === '/api/auth/me' && method === 'GET') {
     const user = await getSessionUser(request, env);
     if (!user) {
@@ -70,20 +76,23 @@ export async function handleAuthRoutes(
         return Response.json({ error: 'Invalid Google credential' }, { status: 400 });
       }
 
-      // Check allowed email
-      const allowedEmails = (env.ALLOWED_EMAIL || '')
-        .split(',')
-        .map((e) => e.trim().toLowerCase())
-        .filter(Boolean);
-      if (allowedEmails.length > 0 && !allowedEmails.includes(payload.email.toLowerCase())) {
-        return Response.json(
-          { error: `Unauthorized email: ${payload.email}. Chỉ chủ sở hữu mới có quyền truy cập.` },
-          { status: 403 }
-        );
+      // Check allowed email (if specified and not '*')
+      const rawAllowed = (env.ALLOWED_EMAIL || '').trim();
+      if (rawAllowed && rawAllowed !== '*') {
+        const allowedEmails = rawAllowed
+          .split(',')
+          .map((e) => e.trim().toLowerCase())
+          .filter(Boolean);
+        if (allowedEmails.length > 0 && !allowedEmails.includes(payload.email.toLowerCase())) {
+          return Response.json(
+            { error: `Tài khoản ${payload.email} chưa được cấp quyền truy cập.` },
+            { status: 403 }
+          );
+        }
       }
 
       // Find or create user
-      let user = await env.DB.prepare('SELECT * FROM users WHERE email = ?')
+      let user = await env.DB.prepare('SELECT * FROM users WHERE LOWER(email) = LOWER(?)')
         .bind(payload.email)
         .first<User>();
 
@@ -93,12 +102,12 @@ export async function handleAuthRoutes(
         await env.DB.prepare(
           'INSERT INTO users (id, email, display_name) VALUES (?, ?, ?)'
         )
-          .bind(id, payload.email, name)
+          .bind(id, payload.email.toLowerCase(), name)
           .run();
 
         user = {
           id,
-          email: payload.email,
+          email: payload.email.toLowerCase(),
           display_name: name,
           created_at: new Date().toISOString(),
           last_login_at: null,

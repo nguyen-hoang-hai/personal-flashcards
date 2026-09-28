@@ -36,13 +36,13 @@ export async function handleDeckRoutes(
       LEFT JOIN vocabulary v ON d.id = v.deck_id AND v.is_active = 1
       LEFT JOIN study_directions sd ON v.id = sd.vocabulary_id AND sd.activation_status = 'active'
       LEFT JOIN user_card_progress ucp ON sd.id = ucp.study_direction_id AND ucp.user_id = ?
-      WHERE d.owner_id = ? AND d.language = ?
+      WHERE d.language = ?
       GROUP BY d.id
       ORDER BY uds.display_order ASC, d.created_at ASC
     `;
 
     const { results } = await env.DB.prepare(query)
-      .bind(now, user.id, user.id, user.id, lang)
+      .bind(now, user.id, user.id, lang)
       .all<Deck>();
 
     return Response.json({ decks: results });
