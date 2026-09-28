@@ -70,10 +70,13 @@ export async function handleAuthRoutes(
       }
 
       // Check allowed email
-      const allowedEmail = env.ALLOWED_EMAIL;
-      if (allowedEmail && payload.email.toLowerCase() !== allowedEmail.toLowerCase()) {
+      const allowedEmails = (env.ALLOWED_EMAIL || '')
+        .split(',')
+        .map((e) => e.trim().toLowerCase())
+        .filter(Boolean);
+      if (allowedEmails.length > 0 && !allowedEmails.includes(payload.email.toLowerCase())) {
         return Response.json(
-          { error: `Unauthorized email: ${payload.email}. Only the owner may access.` },
+          { error: `Unauthorized email: ${payload.email}. Chỉ chủ sở hữu mới có quyền truy cập.` },
           { status: 403 }
         );
       }
