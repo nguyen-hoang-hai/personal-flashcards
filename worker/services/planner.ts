@@ -26,7 +26,7 @@ export interface PlannerConfig {
   maxNewVocabulary: number;
   siblingGap: number;
   deckGap: number;
-  mode?: 'standard' | 'cram';
+  mode?: 'standard' | 'cram' | 'quiz';
 }
 
 export function buildStudyPlan(
@@ -38,6 +38,44 @@ export function buildStudyPlan(
   const eligible = allCards.filter(
     (c) => activeDeckIds.includes(c.deck_id) && c.status !== 'suspended'
   );
+
+  // Quiz Mode (Trắc nghiệm): Random toàn bộ các từ vựng đã học, giới hạn ~20 từ mỗi lượt
+  if (config.mode === 'quiz') {
+    const learnedCards = eligible.filter((c) => c.status !== 'new');
+    if (learnedCards.length === 0) {
+      return [];
+    }
+
+    // Group by vocabulary_id to ensure unique distinct words
+    const byVocab = new Map<string, CandidateCard[]>();
+    for (const card of learnedCards) {
+      if (!byVocab.has(card.vocabulary_id)) {
+        byVocab.set(card.vocabulary_id, []);
+      }
+      byVocab.get(card.vocabulary_id)!.push(card);
+    }
+
+    // Fisher-Yates shuffle the unique vocabularies
+    const vocabIds = Array.from(byVocab.keys());
+    for (let i = vocabIds.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [vocabIds[i], vocabIds[j]] = [vocabIds[j], vocabIds[i]];
+    }
+
+    // Pick 1 direction per vocabulary for up to sessionSize (default 20)
+    const targetSize = config.sessionSize || 20;
+    const selectedVocabIds = vocabIds.slice(0, targetSize);
+    const pool: CandidateCard[] = [];
+
+    for (const vId of selectedVocabIds) {
+      const cards = byVocab.get(vId)!;
+      // Randomly pick one of its directions
+      const chosenCard = cards[Math.floor(Math.random() * cards.length)];
+      pool.push(chosenCard);
+    }
+
+    return applyGapSpacing(pool, config.siblingGap, config.deckGap);
+  }
 
   // Cram Mode (Ôn tập sớm / Luyện tập tự do các từ đã học)
   if (config.mode === 'cram') {

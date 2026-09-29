@@ -88,7 +88,11 @@ export const DashboardPage: React.FC = () => {
     setSelectedDeckIds([]);
   };
 
-  const handleStartSession = async (size: number = 10, mode: 'standard' | 'cram' = 'standard', studyMode: 'flashcard' | 'quiz' = 'flashcard') => {
+  const handleStartSession = async (
+    size: number = 10,
+    mode: 'standard' | 'cram' | 'quiz' = 'standard',
+    studyMode: 'flashcard' | 'quiz' = 'flashcard'
+  ) => {
     if (selectedDeckIds.length === 0) {
       alert('Vui lòng chọn ít nhất 1 bộ thẻ (deck) để bắt đầu học.');
       return;
@@ -202,84 +206,58 @@ export const DashboardPage: React.FC = () => {
             {/* Primary Study Actions - Symmetrical grid of 2 buttons */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full sm:w-auto">
               {isAllDone ? (
-                <>
-                  <button
-                    onClick={() => handleStartSession(sessionSize, 'cram', 'flashcard')}
-                    disabled={startingSession}
-                    className="h-12 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold shadow-md shadow-emerald-600/25 transition-all flex items-center justify-center gap-2 min-w-[170px]"
-                    title="Ôn tập tự do các thẻ đã học bất cứ lúc nào"
-                  >
-                    <Sparkles size={18} />
-                    <span>Luyện tự do ({sessionSize})</span>
-                  </button>
-                  <button
-                    onClick={() => handleStartSession(sessionSize, 'cram', 'quiz')}
-                    disabled={startingSession}
-                    className="h-12 px-6 rounded-2xl bg-violet-600 hover:bg-violet-700 active:scale-95 text-white font-bold shadow-md shadow-violet-600/25 transition-all flex items-center justify-center gap-2 min-w-[170px]"
-                    title="Luyện tập dạng trắc nghiệm 4 đáp án"
-                  >
-                    <HelpCircle size={18} />
-                    <span>Trắc nghiệm ({sessionSize})</span>
-                  </button>
-                </>
+                <button
+                  onClick={() => handleStartSession(sessionSize, 'cram', 'flashcard')}
+                  disabled={startingSession}
+                  className="h-12 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold shadow-md shadow-emerald-600/25 transition-all flex items-center justify-center gap-2 min-w-[170px]"
+                  title="Ôn tập tự do các thẻ đã học bất cứ lúc nào"
+                >
+                  <Sparkles size={18} />
+                  <span>Luyện tự do ({sessionSize})</span>
+                </button>
               ) : (summary?.dueCards || 0) > 0 ? (
-                <>
-                  <button
-                    onClick={() => handleStartSession(sessionSize, 'standard', 'flashcard')}
-                    disabled={startingSession}
-                    className={`h-12 px-6 rounded-2xl text-white font-bold shadow-md hover:shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 min-w-[170px] disabled:opacity-40 disabled:cursor-not-allowed ${
-                      isEn
-                        ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-600/25'
-                        : 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/25'
-                    }`}
-                    title="Ôn tập thẻ đến hạn theo dạng Flashcard"
-                  >
-                    <RotateCcw size={18} />
-                    <span>
-                      {sessionSize >= (summary?.dueCards || 0)
-                        ? `Ôn tất cả (${summary?.dueCards} thẻ)`
-                        : `Ôn tập (${sessionSize} thẻ)`}
-                    </span>
-                  </button>
-                  <button
-                    onClick={() => handleStartSession(sessionSize, 'standard', 'quiz')}
-                    disabled={startingSession}
-                    className="h-12 px-6 rounded-2xl bg-violet-600 hover:bg-violet-700 active:scale-95 text-white font-bold shadow-md shadow-violet-600/25 transition-all flex items-center justify-center gap-2 min-w-[170px] disabled:opacity-40 disabled:cursor-not-allowed"
-                    title="Ôn tập dạng trắc nghiệm 4 đáp án"
-                  >
-                    <HelpCircle size={18} />
-                    <span>
-                      {sessionSize >= (summary?.dueCards || 0)
-                        ? `Trắc nghiệm (${summary?.dueCards})`
-                        : `Trắc nghiệm (${sessionSize})`}
-                    </span>
-                  </button>
-                </>
+                <button
+                  onClick={() => handleStartSession(sessionSize, 'standard', 'flashcard')}
+                  disabled={startingSession}
+                  className={`h-12 px-6 rounded-2xl text-white font-bold shadow-md hover:shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 min-w-[170px] disabled:opacity-40 disabled:cursor-not-allowed ${
+                    isEn
+                      ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-600/25'
+                      : 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/25'
+                  }`}
+                  title="Ôn tập thẻ đến hạn theo dạng Flashcard"
+                >
+                  <RotateCcw size={18} />
+                  <span>
+                    {sessionSize >= (summary?.dueCards || 0)
+                      ? `Ôn tất cả (${summary?.dueCards} thẻ)`
+                      : `Ôn tập (${sessionSize} thẻ)`}
+                  </span>
+                </button>
               ) : (
-                <>
-                  <button
-                    onClick={() => handleStartSession(sessionSize, 'standard', 'flashcard')}
-                    disabled={startingSession}
-                    className={`h-12 px-6 rounded-2xl text-white font-bold shadow-md hover:shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 min-w-[170px] disabled:opacity-40 disabled:cursor-not-allowed ${
-                      isEn
-                        ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/25'
-                        : 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/25'
-                    }`}
-                  >
-                    <Play size={18} fill="currentColor" />
-                    <span>Học từ mới ({sessionSize})</span>
-                  </button>
-                  <button
-                    onClick={() => handleStartSession(sessionSize, 'standard', 'quiz')}
-                    disabled={startingSession}
-                    className="h-12 px-6 rounded-2xl bg-violet-600 hover:bg-violet-700 active:scale-95 text-white font-bold shadow-md shadow-violet-600/25 transition-all flex items-center justify-center gap-2 min-w-[170px] disabled:opacity-40 disabled:cursor-not-allowed"
-                    title="Học từ mới dạng trắc nghiệm 4 đáp án"
-                  >
-                    <HelpCircle size={18} />
-                    <span>Trắc nghiệm ({sessionSize})</span>
-                  </button>
-                </>
+                <button
+                  onClick={() => handleStartSession(sessionSize, 'standard', 'flashcard')}
+                  disabled={startingSession}
+                  className={`h-12 px-6 rounded-2xl text-white font-bold shadow-md hover:shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 min-w-[170px] disabled:opacity-40 disabled:cursor-not-allowed ${
+                    isEn
+                      ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/25'
+                      : 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/25'
+                  }`}
+                >
+                  <Play size={18} fill="currentColor" />
+                  <span>Học từ mới ({sessionSize})</span>
+                </button>
               )}
+
+              {/* Quiz Button - Random 20 words from ALL learned vocabulary */}
+              <button
+                onClick={() => handleStartSession(20, 'quiz', 'quiz')}
+                disabled={startingSession}
+                className="h-12 px-6 rounded-2xl bg-violet-600 hover:bg-violet-700 active:scale-95 text-white font-bold shadow-md shadow-violet-600/25 transition-all flex items-center justify-center gap-2 min-w-[170px] disabled:opacity-40 disabled:cursor-not-allowed"
+                title="Luyện tập trắc nghiệm ngẫu nhiên 20 từ trong kho từ vựng đã học"
+              >
+                <HelpCircle size={18} />
+                <span>Trắc nghiệm (20 từ)</span>
+              </button>
             </div>
 
             {/* Session Size Segmented Toggle */}

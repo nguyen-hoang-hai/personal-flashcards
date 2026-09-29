@@ -37,7 +37,7 @@ export async function handleStudyRoutes(
       language: 'en' | 'ja';
       activeDeckIds?: string[];
       sessionSize?: number;
-      mode?: 'standard' | 'cram';
+      mode?: 'standard' | 'cram' | 'quiz';
     };
 
     const lang = body.language || 'en';
@@ -112,6 +112,12 @@ export async function handleStudyRoutes(
     const sessionCards = plannedQueue.slice(0, sessionSize);
 
     if (sessionCards.length === 0) {
+      if (body.mode === 'quiz') {
+        return Response.json({
+          session: null,
+          message: 'Bạn chưa có từ vựng nào đã học để làm trắc nghiệm. Hãy học một vài từ trước nhé!',
+        });
+      }
       return Response.json({
         session: null,
         message: 'No cards due for review or available to learn right now!',
