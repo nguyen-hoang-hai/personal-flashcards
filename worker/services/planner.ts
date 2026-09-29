@@ -39,7 +39,7 @@ export function buildStudyPlan(
     (c) => activeDeckIds.includes(c.deck_id) && c.status !== 'suspended'
   );
 
-  // Quiz Mode (Trắc nghiệm): Random toàn bộ các từ vựng đã học, giới hạn ~20 từ mỗi lượt
+  // Quiz Mode (Trắc nghiệm): Ôn lại toàn bộ các từ vựng đã học
   if (config.mode === 'quiz') {
     const learnedCards = eligible.filter((c) => c.status !== 'new');
     if (learnedCards.length === 0) {
@@ -62,15 +62,16 @@ export function buildStudyPlan(
       [vocabIds[i], vocabIds[j]] = [vocabIds[j], vocabIds[i]];
     }
 
-    // Pick 1 direction per vocabulary for up to sessionSize (default 20)
-    const targetSize = config.sessionSize || 20;
+    // Yêu cầu: Ôn lại toàn bộ các từ đã học (hoặc sessionSize nếu được chỉ định)
+    const targetSize = config.sessionSize && config.sessionSize > 0 ? config.sessionSize : vocabIds.length;
     const selectedVocabIds = vocabIds.slice(0, targetSize);
     const pool: CandidateCard[] = [];
 
     for (const vId of selectedVocabIds) {
       const cards = byVocab.get(vId)!;
-      // Randomly pick one of its directions
-      const chosenCard = cards[Math.floor(Math.random() * cards.length)];
+      // Ưu tiên hướng thẻ đang đến hạn ôn nếu có (để giải phóng thẻ due), nếu không thì chọn ngẫu nhiên
+      const dueDirection = cards.find(c => c.due_at && new Date(c.due_at).getTime() <= endOfToday);
+      const chosenCard = dueDirection || cards[Math.floor(Math.random() * cards.length)];
       pool.push(chosenCard);
     }
 
@@ -122,10 +123,11 @@ export function buildStudyPlan(
 
   // Strict Review-First Policy:
   // Bắt buộc phải ôn tập hết các từ cần ôn (totalDueCount === 0) thì mới cho phép học từ mới!
+  // Yêu cầu 2: Mỗi lần học từ mới là tối đa 10 từ!
   const totalDueCount = learningDue.length + overdue.length + dueToday.length;
   let allowedNewVocab = 0;
   if (totalDueCount === 0) {
-    allowedNewVocab = config.maxNewVocabulary;
+    allowedNewVocab = Math.min(10, config.maxNewVocabulary);
   }
 
   // Select new vocabulary up to allowedNewVocab (chỉ khi không còn thẻ nào cần ôn)

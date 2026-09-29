@@ -30,7 +30,6 @@ export const DashboardPage: React.FC = () => {
   const [summary, setSummary] = useState<any>(null);
   const [startingSession, setStartingSession] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [sessionSize, setSessionSize] = useState<number>(10);
 
   const isEn = language === 'en';
   const themeColor = isEn ? 'indigo' : 'rose';
@@ -44,18 +43,6 @@ export const DashboardPage: React.FC = () => {
       ]);
       setSummary(dashData);
       setDecks(decksData.decks || []);
-
-      // Auto-set session size to match due cards (up to 30), or 20 if more
-      const dueCount = dashData.dueCards || 0;
-      if (dueCount > 0) {
-        if (dueCount <= 30) {
-          setSessionSize(dueCount);
-        } else {
-          setSessionSize(20);
-        }
-      } else {
-        setSessionSize(10);
-      }
 
       // Default select all active decks
       const activeIds = (decksData.decks || [])
@@ -145,7 +132,11 @@ export const DashboardPage: React.FC = () => {
     }
   };
 
-  const isAllDone = summary && summary.dueCards + summary.newWords === 0;
+  const totalWords = decks.reduce((acc, d) => acc + (d.total_words || 0), 0);
+  const dueCount = summary?.dueCards || 0;
+  const newCount = summary?.newWords || 0;
+  const learnedCount = Math.max(0, totalWords - newCount);
+  const isAllDone = summary && dueCount + newCount === 0;
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
@@ -194,139 +185,77 @@ export const DashboardPage: React.FC = () => {
             </h1>
             <p className="text-slate-500 text-sm mt-1.5 leading-relaxed">
               {isAllDone
-                ? 'Tuyệt vời! Bạn đã hoàn thành toàn bộ mục tiêu hôm nay. Có thể ôn tập tự do bất kỳ lúc nào.'
-                : (summary?.dueCards || 0) > 0
-                ? `Bạn còn ${summary?.dueCards} thẻ cần ôn tập. Hãy hoàn thành hết các thẻ cần ôn trước khi mở từ mới nhé!`
-                : 'Đã hoàn thành hết thẻ cần ôn! Bạn đã sẵn sàng học các từ mới tiếp theo.'}
+                ? 'Tuyệt vời! Bạn đã hoàn thành toàn bộ kho từ vựng. Bạn có thể làm trắc nghiệm ôn lại bất kỳ lúc nào.'
+                : dueCount > 0
+                ? `Bạn còn ${dueCount} thẻ cần ôn tập. Hãy hoàn thành bài ôn tập trắc nghiệm trước khi mở học từ mới nhé!`
+                : 'Đã hoàn thành hết bài ôn tập! Bạn đã sẵn sàng học 10 từ mới tiếp theo bằng Flashcard.'}
             </p>
           </div>
 
-          {/* Quick Action Study Box - Perfectly Balanced */}
-          <div className="flex flex-col items-start lg:items-end gap-3 shrink-0">
-            {/* Primary Study Actions - Symmetrical grid of 2 buttons */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full sm:w-auto">
-              {isAllDone ? (
+          {/* Quick Action Study Box */}
+          <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0">
+            {dueCount > 0 ? (
+              <>
+                {/* 1. Lúc ôn tập: Ôn tập tất cả bằng hình thức trắc nghiệm */}
                 <button
-                  onClick={() => handleStartSession(sessionSize, 'cram', 'flashcard')}
+                  onClick={() => handleStartSession(dueCount, 'standard', 'quiz')}
                   disabled={startingSession}
-                  className="h-12 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold shadow-md shadow-emerald-600/25 transition-all flex items-center justify-center gap-2 min-w-[170px]"
-                  title="Ôn tập tự do các thẻ đã học bất cứ lúc nào"
+                  className="h-12 px-6 rounded-2xl bg-violet-600 hover:bg-violet-700 active:scale-95 text-white font-bold shadow-md shadow-violet-600/30 transition-all flex items-center justify-center gap-2.5 min-w-[200px]"
+                  title="Ôn tập trắc nghiệm toàn bộ các thẻ đến hạn"
                 >
-                  <Sparkles size={18} />
-                  <span>Luyện tự do ({sessionSize})</span>
+                  <HelpCircle size={19} />
+                  <span>Ôn tập trắc nghiệm ({dueCount} từ)</span>
                 </button>
-              ) : (summary?.dueCards || 0) > 0 ? (
-                <button
-                  onClick={() => handleStartSession(sessionSize, 'standard', 'flashcard')}
-                  disabled={startingSession}
-                  className={`h-12 px-6 rounded-2xl text-white font-bold shadow-md hover:shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 min-w-[170px] disabled:opacity-40 disabled:cursor-not-allowed ${
-                    isEn
-                      ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-600/25'
-                      : 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/25'
-                  }`}
-                  title="Ôn tập thẻ đến hạn theo dạng Flashcard"
+
+                {/* Khóa học từ mới khi chưa ôn trắc nghiệm xong */}
+                <div
+                  className="h-12 px-5 rounded-2xl bg-slate-100 text-slate-400 font-semibold border border-slate-200/80 flex items-center justify-center gap-2 text-xs sm:text-sm select-none cursor-not-allowed"
+                  title="Hoàn thành bài ôn tập trắc nghiệm trước để mở học 10 từ mới"
                 >
-                  <RotateCcw size={18} />
-                  <span>
-                    {sessionSize >= (summary?.dueCards || 0)
-                      ? `Ôn tất cả (${summary?.dueCards} thẻ)`
-                      : `Ôn tập (${sessionSize} thẻ)`}
-                  </span>
-                </button>
-              ) : (
+                  <Lock size={15} />
+                  <span>Học từ mới (Khóa - Cần ôn trước)</span>
+                </div>
+              </>
+            ) : newCount > 0 ? (
+              <>
+                {/* 2. Sau khi ôn xong: Học từ mới bằng Flashcard, tối đa 10 từ */}
                 <button
-                  onClick={() => handleStartSession(sessionSize, 'standard', 'flashcard')}
+                  onClick={() => handleStartSession(10, 'standard', 'flashcard')}
                   disabled={startingSession}
-                  className={`h-12 px-6 rounded-2xl text-white font-bold shadow-md hover:shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 min-w-[170px] disabled:opacity-40 disabled:cursor-not-allowed ${
+                  className={`h-12 px-6 rounded-2xl text-white font-bold shadow-md hover:shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2.5 min-w-[200px] ${
                     isEn
-                      ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/25'
-                      : 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/25'
+                      ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/30'
+                      : 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/30'
                   }`}
+                  title="Học 10 từ mới tiếp theo bằng thẻ Flashcard"
                 >
                   <Play size={18} fill="currentColor" />
-                  <span>Học từ mới ({sessionSize})</span>
+                  <span>Học 10 từ mới (Flashcard)</span>
                 </button>
-              )}
 
-              {/* Quiz Button - Random 20 words from ALL learned vocabulary */}
+                {/* 3. Phần trắc nghiệm cho ôn lại toàn bộ các từ đã học */}
+                <button
+                  onClick={() => handleStartSession(learnedCount, 'quiz', 'quiz')}
+                  disabled={startingSession || learnedCount === 0}
+                  className="h-12 px-5 rounded-2xl bg-violet-50 hover:bg-violet-100 active:scale-95 text-violet-700 border border-violet-200/90 font-bold transition-all flex items-center justify-center gap-2 text-xs sm:text-sm min-w-[190px]"
+                  title="Luyện tập trắc nghiệm ôn lại toàn bộ từ vựng đã học"
+                >
+                  <HelpCircle size={17} />
+                  <span>Trắc nghiệm toàn bộ ({learnedCount} từ)</span>
+                </button>
+              </>
+            ) : (
+              /* isAllDone: Trắc nghiệm toàn bộ từ đã học */
               <button
-                onClick={() => handleStartSession(20, 'quiz', 'quiz')}
-                disabled={startingSession}
-                className="h-12 px-6 rounded-2xl bg-violet-600 hover:bg-violet-700 active:scale-95 text-white font-bold shadow-md shadow-violet-600/25 transition-all flex items-center justify-center gap-2 min-w-[170px] disabled:opacity-40 disabled:cursor-not-allowed"
-                title="Luyện tập trắc nghiệm ngẫu nhiên 20 từ trong kho từ vựng đã học"
+                onClick={() => handleStartSession(learnedCount, 'quiz', 'quiz')}
+                disabled={startingSession || learnedCount === 0}
+                className="h-12 px-6 rounded-2xl bg-violet-600 hover:bg-violet-700 active:scale-95 text-white font-bold shadow-md shadow-violet-600/30 transition-all flex items-center justify-center gap-2.5 min-w-[200px]"
+                title="Luyện tập trắc nghiệm toàn bộ các từ đã học"
               >
-                <HelpCircle size={18} />
-                <span>Trắc nghiệm (20 từ)</span>
+                <HelpCircle size={19} />
+                <span>Trắc nghiệm toàn bộ ({learnedCount} từ)</span>
               </button>
-            </div>
-
-            {/* Session Size Segmented Toggle */}
-            <div className="flex items-center gap-2 text-xs text-slate-500 self-center lg:self-end">
-              <span className="font-medium">Số thẻ mỗi phiên:</span>
-              <div className="bg-slate-100 p-0.5 rounded-xl flex items-center gap-1 border border-slate-200/80">
-                {(summary?.dueCards || 0) > 0 ? (
-                  <>
-                    {(summary?.dueCards || 0) > 10 && (
-                      <button
-                        onClick={() => setSessionSize(10)}
-                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                          sessionSize === 10
-                            ? 'bg-white text-slate-900 shadow-xs'
-                            : 'text-slate-500 hover:text-slate-800'
-                        }`}
-                      >
-                        10 thẻ
-                      </button>
-                    )}
-                    {(summary?.dueCards || 0) > 20 && (
-                      <button
-                        onClick={() => setSessionSize(20)}
-                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                          sessionSize === 20
-                            ? 'bg-white text-slate-900 shadow-xs'
-                            : 'text-slate-500 hover:text-slate-800'
-                        }`}
-                      >
-                        20 thẻ
-                      </button>
-                    )}
-                    <button
-                      onClick={() => setSessionSize(summary.dueCards)}
-                      className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                        sessionSize === summary.dueCards
-                          ? 'bg-white text-slate-900 shadow-xs'
-                          : 'text-slate-500 hover:text-slate-800'
-                      }`}
-                    >
-                      Tất cả ({summary.dueCards} thẻ)
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => setSessionSize(10)}
-                      className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                        sessionSize === 10
-                          ? 'bg-white text-slate-900 shadow-xs'
-                          : 'text-slate-500 hover:text-slate-800'
-                      }`}
-                    >
-                      10 thẻ
-                    </button>
-                    <button
-                      onClick={() => setSessionSize(20)}
-                      className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                        sessionSize === 20
-                          ? 'bg-white text-slate-900 shadow-xs'
-                          : 'text-slate-500 hover:text-slate-800'
-                      }`}
-                    >
-                      20 thẻ
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
+            )}
           </div>
         </div>
 
@@ -343,13 +272,13 @@ export const DashboardPage: React.FC = () => {
               {loading ? (
                 <div className="h-8 w-16 bg-slate-200 rounded-lg animate-pulse" />
               ) : (
-                summary?.dueCards || 0
+                dueCount
               )}
             </div>
-            {(summary?.dueCards || 0) > 0 ? (
+            {dueCount > 0 ? (
               <div className="inline-flex items-center gap-1 text-[11px] text-amber-700 font-semibold bg-amber-100/60 px-2 py-0.5 rounded-md w-fit">
-                <RotateCcw size={12} />
-                <span>Cần hoàn thành trước</span>
+                <HelpCircle size={12} />
+                <span>Cần ôn trắc nghiệm</span>
               </div>
             ) : (
               <div className="inline-flex items-center gap-1 text-[11px] text-emerald-700 font-semibold bg-emerald-100/60 px-2 py-0.5 rounded-md w-fit">
@@ -366,35 +295,35 @@ export const DashboardPage: React.FC = () => {
               {loading ? (
                 <div className="h-8 w-16 bg-slate-200 rounded-lg animate-pulse" />
               ) : (
-                summary?.newWords || 0
+                newCount
               )}
             </div>
-            {(summary?.dueCards || 0) > 0 ? (
+            {dueCount > 0 ? (
               <div className="inline-flex items-center gap-1 text-[11px] text-slate-500 font-medium bg-slate-200/60 px-2 py-0.5 rounded-md w-fit">
                 <Lock size={12} />
                 <span>Mở sau khi ôn xong</span>
               </div>
             ) : (
               <div className="inline-flex items-center gap-1 text-[11px] text-emerald-700 font-semibold bg-emerald-100/60 px-2 py-0.5 rounded-md w-fit">
-                <Sparkles size={12} />
-                <span>Sẵn sàng học ngay</span>
+                <Play size={12} />
+                <span>Sẵn sàng học (Flashcard)</span>
               </div>
             )}
           </div>
 
-          {/* Card 3: Completed */}
+          {/* Card 3: Learned */}
           <div className="bg-slate-50/70 border border-slate-100 rounded-2xl p-4 flex flex-col justify-between">
-            <div className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Phiên xong hôm nay</div>
-            <div className="text-2xl sm:text-3xl font-extrabold text-emerald-600 tracking-tight my-1">
+            <div className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Đã học (Learned)</div>
+            <div className="text-2xl sm:text-3xl font-extrabold text-violet-600 tracking-tight my-1">
               {loading ? (
                 <div className="h-8 w-16 bg-slate-200 rounded-lg animate-pulse" />
               ) : (
-                summary?.sessionsCompletedToday || 0
+                learnedCount
               )}
             </div>
-            <div className="inline-flex items-center gap-1 text-[11px] text-slate-500 font-medium bg-slate-200/60 px-2 py-0.5 rounded-md w-fit">
-              <CheckCircle2 size={12} className="text-emerald-600" />
-              <span>Tiến độ hàng ngày</span>
+            <div className="inline-flex items-center gap-1 text-[11px] text-violet-700 font-semibold bg-violet-100/60 px-2 py-0.5 rounded-md w-fit">
+              <Sparkles size={12} />
+              <span>Kho từ ôn trắc nghiệm</span>
             </div>
           </div>
         </div>

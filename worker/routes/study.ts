@@ -41,7 +41,7 @@ export async function handleStudyRoutes(
     };
 
     const lang = body.language || 'en';
-    const sessionSize = body.sessionSize || 10;
+    const sessionSize = body.mode === 'quiz' ? (body.sessionSize || 500) : (body.sessionSize || 10);
 
     // Determine active deck IDs if not provided
     let deckIds = body.activeDeckIds;
@@ -103,7 +103,7 @@ export async function handleStudyRoutes(
 
     const plannedQueue = buildStudyPlan(results, deckIds, {
       sessionSize,
-      maxNewVocabulary: sessionSize,
+      maxNewVocabulary: 10,
       siblingGap: 5,
       deckGap: 1,
       mode: body.mode || 'standard',
