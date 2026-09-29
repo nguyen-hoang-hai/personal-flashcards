@@ -45,6 +45,18 @@ export const DashboardPage: React.FC = () => {
       setSummary(dashData);
       setDecks(decksData.decks || []);
 
+      // Auto-set session size to match due cards (up to 30), or 20 if more
+      const dueCount = dashData.dueCards || 0;
+      if (dueCount > 0) {
+        if (dueCount <= 30) {
+          setSessionSize(dueCount);
+        } else {
+          setSessionSize(20);
+        }
+      } else {
+        setSessionSize(10);
+      }
+
       // Default select all active decks
       const activeIds = (decksData.decks || [])
         .filter((d: Deck) => d.study_status === 'active')
@@ -223,7 +235,11 @@ export const DashboardPage: React.FC = () => {
                     title="Ôn tập thẻ đến hạn theo dạng Flashcard"
                   >
                     <RotateCcw size={18} />
-                    <span>Ôn tập ({sessionSize} thẻ)</span>
+                    <span>
+                      {sessionSize >= (summary?.dueCards || 0)
+                        ? `Ôn tất cả (${summary?.dueCards} thẻ)`
+                        : `Ôn tập (${sessionSize} thẻ)`}
+                    </span>
                   </button>
                   <button
                     onClick={() => handleStartSession(sessionSize, 'standard', 'quiz')}
@@ -232,7 +248,11 @@ export const DashboardPage: React.FC = () => {
                     title="Ôn tập dạng trắc nghiệm 4 đáp án"
                   >
                     <HelpCircle size={18} />
-                    <span>Trắc nghiệm ({sessionSize})</span>
+                    <span>
+                      {sessionSize >= (summary?.dueCards || 0)
+                        ? `Trắc nghiệm (${summary?.dueCards})`
+                        : `Trắc nghiệm (${sessionSize})`}
+                    </span>
                   </button>
                 </>
               ) : (
@@ -266,26 +286,67 @@ export const DashboardPage: React.FC = () => {
             <div className="flex items-center gap-2 text-xs text-slate-500 self-center lg:self-end">
               <span className="font-medium">Số thẻ mỗi phiên:</span>
               <div className="bg-slate-100 p-0.5 rounded-xl flex items-center gap-1 border border-slate-200/80">
-                <button
-                  onClick={() => setSessionSize(10)}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                    sessionSize === 10
-                      ? 'bg-white text-slate-900 shadow-xs'
-                      : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                >
-                  10 thẻ
-                </button>
-                <button
-                  onClick={() => setSessionSize(20)}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
-                    sessionSize === 20
-                      ? 'bg-white text-slate-900 shadow-xs'
-                      : 'text-slate-500 hover:text-slate-800'
-                  }`}
-                >
-                  20 thẻ
-                </button>
+                {(summary?.dueCards || 0) > 0 ? (
+                  <>
+                    {(summary?.dueCards || 0) > 10 && (
+                      <button
+                        onClick={() => setSessionSize(10)}
+                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                          sessionSize === 10
+                            ? 'bg-white text-slate-900 shadow-xs'
+                            : 'text-slate-500 hover:text-slate-800'
+                        }`}
+                      >
+                        10 thẻ
+                      </button>
+                    )}
+                    {(summary?.dueCards || 0) > 20 && (
+                      <button
+                        onClick={() => setSessionSize(20)}
+                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                          sessionSize === 20
+                            ? 'bg-white text-slate-900 shadow-xs'
+                            : 'text-slate-500 hover:text-slate-800'
+                        }`}
+                      >
+                        20 thẻ
+                      </button>
+                    )}
+                    <button
+                      onClick={() => setSessionSize(summary.dueCards)}
+                      className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                        sessionSize === summary.dueCards
+                          ? 'bg-white text-slate-900 shadow-xs'
+                          : 'text-slate-500 hover:text-slate-800'
+                      }`}
+                    >
+                      Tất cả ({summary.dueCards} thẻ)
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => setSessionSize(10)}
+                      className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                        sessionSize === 10
+                          ? 'bg-white text-slate-900 shadow-xs'
+                          : 'text-slate-500 hover:text-slate-800'
+                      }`}
+                    >
+                      10 thẻ
+                    </button>
+                    <button
+                      onClick={() => setSessionSize(20)}
+                      className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                        sessionSize === 20
+                          ? 'bg-white text-slate-900 shadow-xs'
+                          : 'text-slate-500 hover:text-slate-800'
+                      }`}
+                    >
+                      20 thẻ
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </div>
