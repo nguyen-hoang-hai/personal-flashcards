@@ -186,76 +186,55 @@ export const DashboardPage: React.FC = () => {
             <p className="text-slate-500 text-sm mt-1.5 leading-relaxed">
               {isAllDone
                 ? 'Tuyệt vời! Bạn đã hoàn thành toàn bộ kho từ vựng. Bạn có thể làm trắc nghiệm ôn lại bất kỳ lúc nào.'
+                : dueCount > 0 && newCount > 0
+                ? `Phiên học kết hợp: Ôn tập trắc nghiệm ${dueCount} từ trước ➔ Sau đó học tiếp 10 từ mới bằng Flashcard.`
                 : dueCount > 0
-                ? `Bạn còn ${dueCount} thẻ cần ôn tập. Hãy hoàn thành bài ôn tập trắc nghiệm trước khi mở học từ mới nhé!`
-                : 'Đã hoàn thành hết bài ôn tập! Bạn đã sẵn sàng học 10 từ mới tiếp theo bằng Flashcard.'}
+                ? `Bạn còn ${dueCount} thẻ cần ôn tập bằng hình thức trắc nghiệm 4 đáp án.`
+                : 'Đã hoàn thành ôn tập hôm nay! Sẵn sàng học 10 từ mới tiếp theo bằng Flashcard.'}
             </p>
           </div>
 
           {/* Quick Action Study Box */}
           <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0">
-            {dueCount > 0 ? (
-              <>
-                {/* 1. Lúc ôn tập: Ôn tập tất cả bằng hình thức trắc nghiệm */}
-                <button
-                  onClick={() => handleStartSession(dueCount, 'standard', 'quiz')}
-                  disabled={startingSession}
-                  className="h-12 px-6 rounded-2xl bg-violet-600 hover:bg-violet-700 active:scale-95 text-white font-bold shadow-md shadow-violet-600/30 transition-all flex items-center justify-center gap-2.5 min-w-[200px]"
-                  title="Ôn tập trắc nghiệm toàn bộ các thẻ đến hạn"
-                >
-                  <HelpCircle size={19} />
-                  <span>Ôn tập trắc nghiệm ({dueCount} từ)</span>
-                </button>
-
-                {/* Khóa học từ mới khi chưa ôn trắc nghiệm xong */}
-                <div
-                  className="h-12 px-5 rounded-2xl bg-slate-100 text-slate-400 font-semibold border border-slate-200/80 flex items-center justify-center gap-2 text-xs sm:text-sm select-none cursor-not-allowed"
-                  title="Hoàn thành bài ôn tập trắc nghiệm trước để mở học 10 từ mới"
-                >
-                  <Lock size={15} />
-                  <span>Học từ mới (Khóa - Cần ôn trước)</span>
-                </div>
-              </>
-            ) : newCount > 0 ? (
-              <>
-                {/* 2. Sau khi ôn xong: Học từ mới bằng Flashcard, tối đa 10 từ */}
-                <button
-                  onClick={() => handleStartSession(10, 'standard', 'flashcard')}
-                  disabled={startingSession}
-                  className={`h-12 px-6 rounded-2xl text-white font-bold shadow-md hover:shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2.5 min-w-[200px] ${
-                    isEn
-                      ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/30'
-                      : 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/30'
-                  }`}
-                  title="Học 10 từ mới tiếp theo bằng thẻ Flashcard"
-                >
-                  <Play size={18} fill="currentColor" />
-                  <span>Học 10 từ mới (Flashcard)</span>
-                </button>
-
-                {/* 3. Phần trắc nghiệm cho ôn lại toàn bộ các từ đã học */}
-                <button
-                  onClick={() => handleStartSession(learnedCount, 'quiz', 'quiz')}
-                  disabled={startingSession || learnedCount === 0}
-                  className="h-12 px-5 rounded-2xl bg-violet-50 hover:bg-violet-100 active:scale-95 text-violet-700 border border-violet-200/90 font-bold transition-all flex items-center justify-center gap-2 text-xs sm:text-sm min-w-[190px]"
-                  title="Luyện tập trắc nghiệm ôn lại toàn bộ từ vựng đã học"
-                >
-                  <HelpCircle size={17} />
-                  <span>Trắc nghiệm toàn bộ ({learnedCount} từ)</span>
-                </button>
-              </>
-            ) : (
-              /* isAllDone: Trắc nghiệm toàn bộ từ đã học */
+            {/* Nút 1: Phiên học chính (Ôn tập trắc nghiệm trước -> Nối tiếp học từ mới bằng Flashcard) */}
+            {!isAllDone && (
               <button
-                onClick={() => handleStartSession(learnedCount, 'quiz', 'quiz')}
-                disabled={startingSession || learnedCount === 0}
-                className="h-12 px-6 rounded-2xl bg-violet-600 hover:bg-violet-700 active:scale-95 text-white font-bold shadow-md shadow-violet-600/30 transition-all flex items-center justify-center gap-2.5 min-w-[200px]"
-                title="Luyện tập trắc nghiệm toàn bộ các từ đã học"
+                onClick={() => handleStartSession(dueCount + (newCount > 0 ? 10 : 0), 'standard', 'flashcard')}
+                disabled={startingSession}
+                className={`h-12 px-6 rounded-2xl text-white font-bold shadow-md hover:shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2.5 min-w-[220px] ${
+                  isEn
+                    ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/30'
+                    : 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/30'
+                }`}
+                title="Ôn tập trắc nghiệm các thẻ đến hạn trước, sau đó tự động chuyển sang học 10 từ mới bằng Flashcard"
               >
-                <HelpCircle size={19} />
-                <span>Trắc nghiệm toàn bộ ({learnedCount} từ)</span>
+                <Play size={18} fill="currentColor" />
+                <span>
+                  {dueCount > 0 && newCount > 0
+                    ? `Bắt đầu học (${dueCount} ôn + 10 mới)`
+                    : dueCount > 0
+                    ? `Ôn tập trắc nghiệm (${dueCount} từ)`
+                    : `Học 10 từ mới (Flashcard)`}
+                </span>
               </button>
             )}
+
+            {/* Nút 2: Trắc nghiệm toàn bộ (Tự do, không bắt buộc, ôn lại toàn bộ từ đã học) */}
+            <button
+              onClick={() => handleStartSession(learnedCount, 'quiz', 'quiz')}
+              disabled={startingSession || learnedCount === 0}
+              className={`h-12 px-5 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 text-xs sm:text-sm min-w-[190px] ${
+                learnedCount === 0
+                  ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
+                  : isAllDone
+                  ? 'bg-violet-600 hover:bg-violet-700 active:scale-95 text-white shadow-md shadow-violet-600/30'
+                  : 'bg-violet-50 hover:bg-violet-100 active:scale-95 text-violet-700 border border-violet-200/90'
+              }`}
+              title="Luyện tập trắc nghiệm tự do toàn bộ các từ vựng đã học"
+            >
+              <HelpCircle size={17} />
+              <span>Trắc nghiệm toàn bộ ({learnedCount} từ)</span>
+            </button>
           </div>
         </div>
 
@@ -278,7 +257,7 @@ export const DashboardPage: React.FC = () => {
             {dueCount > 0 ? (
               <div className="inline-flex items-center gap-1 text-[11px] text-amber-700 font-semibold bg-amber-100/60 px-2 py-0.5 rounded-md w-fit">
                 <HelpCircle size={12} />
-                <span>Cần ôn trắc nghiệm</span>
+                <span>Trắc nghiệm ôn tập</span>
               </div>
             ) : (
               <div className="inline-flex items-center gap-1 text-[11px] text-emerald-700 font-semibold bg-emerald-100/60 px-2 py-0.5 rounded-md w-fit">
@@ -298,15 +277,15 @@ export const DashboardPage: React.FC = () => {
                 newCount
               )}
             </div>
-            {dueCount > 0 ? (
-              <div className="inline-flex items-center gap-1 text-[11px] text-slate-500 font-medium bg-slate-200/60 px-2 py-0.5 rounded-md w-fit">
-                <Lock size={12} />
-                <span>Mở sau khi ôn xong</span>
+            {newCount > 0 ? (
+              <div className="inline-flex items-center gap-1 text-[11px] text-emerald-700 font-semibold bg-emerald-100/60 px-2 py-0.5 rounded-md w-fit">
+                <Sparkles size={12} />
+                <span>Tối đa 10 từ/phiên (Flashcard)</span>
               </div>
             ) : (
-              <div className="inline-flex items-center gap-1 text-[11px] text-emerald-700 font-semibold bg-emerald-100/60 px-2 py-0.5 rounded-md w-fit">
-                <Play size={12} />
-                <span>Sẵn sàng học (Flashcard)</span>
+              <div className="inline-flex items-center gap-1 text-[11px] text-slate-500 font-medium bg-slate-200/60 px-2 py-0.5 rounded-md w-fit">
+                <Check size={12} />
+                <span>Đã học hết từ mới</span>
               </div>
             )}
           </div>
@@ -322,8 +301,8 @@ export const DashboardPage: React.FC = () => {
               )}
             </div>
             <div className="inline-flex items-center gap-1 text-[11px] text-violet-700 font-semibold bg-violet-100/60 px-2 py-0.5 rounded-md w-fit">
-              <Sparkles size={12} />
-              <span>Kho từ ôn trắc nghiệm</span>
+              <HelpCircle size={12} />
+              <span>Kho trắc nghiệm tự do</span>
             </div>
           </div>
         </div>

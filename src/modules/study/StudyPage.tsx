@@ -14,6 +14,7 @@ import {
   Sparkles,
   ChevronRight,
   Loader2,
+  HelpCircle,
 } from 'lucide-react';
 
 
@@ -74,6 +75,12 @@ export const StudyPage: React.FC = () => {
   }, [language, navigate]);
 
   const currentCard = cards[currentIndex];
+
+  // Yêu cầu cốt lõi:
+  // 1. Lúc ôn tập: các thẻ đã học (card_status !== 'new') ôn tập bằng trắc nghiệm 4 đáp án.
+  // 2. Sau khi ôn hết: nối tiếp học từ mới (card_status === 'new') bằng thẻ lật Flashcard 3D!
+  // 3. Nếu chọn chế độ 'Trắc nghiệm toàn bộ' (studyMode === 'quiz') thì tất cả thẻ đều là trắc nghiệm.
+  const isQuizCard = studyMode === 'quiz' || (Boolean(currentCard) && currentCard.card_status !== 'new');
 
   // Flip card with smooth 3D transition & optional auto TTS
   const handleFlip = useCallback(() => {
@@ -166,22 +173,28 @@ export const StudyPage: React.FC = () => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
 
-      if (e.code === 'Space') {
-        e.preventDefault();
-        handleFlip();
-      } else if (isFlipped && !answering) {
-        if (e.key === '1') handleAnswer('again');
-        if (e.key === '2') handleAnswer('hard');
-        if (e.key === '3') handleAnswer('good');
-        if (e.key === '4') handleAnswer('easy');
-      } else if (e.code === 'Escape') {
+      if (e.code === 'Escape') {
         navigate(`/${language}/dashboard`);
+        return;
+      }
+
+      // Space và phím số 1-4 chỉ áp dụng khi học bằng Flashcard (QuizCard đã có phím riêng)
+      if (!isQuizCard) {
+        if (e.code === 'Space') {
+          e.preventDefault();
+          handleFlip();
+        } else if (isFlipped && !answering) {
+          if (e.key === '1') handleAnswer('again');
+          if (e.key === '2') handleAnswer('hard');
+          if (e.key === '3') handleAnswer('good');
+          if (e.key === '4') handleAnswer('easy');
+        }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleFlip, isFlipped, answering, language, navigate]);
+  }, [handleFlip, isFlipped, answering, language, navigate, isQuizCard]);
 
   if (loading || !currentCard) {
     return (
@@ -213,6 +226,17 @@ export const StudyPage: React.FC = () => {
             <span className="font-medium text-slate-400">
               {currentIndex + 1} / {cards.length}
             </span>
+            {isQuizCard ? (
+              <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-violet-950/80 text-violet-300 border border-violet-700/60 flex items-center gap-1 shadow-xs">
+                <HelpCircle size={12} />
+                <span>Trắc nghiệm ôn tập</span>
+              </span>
+            ) : (
+              <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-950/80 text-emerald-300 border border-emerald-700/60 flex items-center gap-1 shadow-xs">
+                <Sparkles size={12} />
+                <span>Học từ mới (Flashcard)</span>
+              </span>
+            )}
           </div>
 
           <div className="flex items-center gap-1.5">
@@ -261,7 +285,7 @@ export const StudyPage: React.FC = () => {
 
       {/* Central Card Area */}
       <main className="max-w-2xl mx-auto w-full px-4 py-4 sm:py-6 flex-1 flex flex-col justify-center z-10">
-        {studyMode === 'quiz' ? (
+        {isQuizCard ? (
           <div key={`quiz-wrapper-${currentIndex}`} className="animate-card-enter w-full">
             <QuizCard
               card={currentCard}
@@ -404,7 +428,7 @@ export const StudyPage: React.FC = () => {
       </main>
 
       {/* Bottom Action Rating Bar — only shown in flashcard mode */}
-      {studyMode !== 'quiz' && (
+      {!isQuizCard && (
       <footer className="max-w-2xl mx-auto w-full px-4 pb-6 sm:pb-8 z-10">
         {!isFlipped ? (
           <button

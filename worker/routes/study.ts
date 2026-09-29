@@ -494,10 +494,11 @@ async function getSessionCards(env: Env, sessionId: string): Promise<StudySessio
       COALESCE(ucp.interval_days, 0) as current_interval,
       COALESCE(ucp.version, 1) as version
     FROM study_session_cards ssc
+    JOIN study_sessions ss ON ssc.session_id = ss.id
     JOIN study_directions sd ON ssc.study_direction_id = sd.id
     JOIN vocabulary v ON sd.vocabulary_id = v.id
     JOIN decks d ON v.deck_id = d.id
-    LEFT JOIN user_card_progress ucp ON sd.id = ucp.study_direction_id
+    LEFT JOIN user_card_progress ucp ON sd.id = ucp.study_direction_id AND ucp.user_id = ss.user_id
     WHERE ssc.session_id = ?
     ORDER BY ssc.position ASC
   `;

@@ -58,6 +58,23 @@ export const QuizCard: React.FC<QuizCardProps> = ({ card, language, onAnswer, an
     }, 1200);
   };
 
+  // Keyboard shortcut listener (1, 2, 3, 4)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (revealed || answering || loadingOptions || options.length === 0) return;
+      if (['1', '2', '3', '4'].includes(e.key)) {
+        const idx = parseInt(e.key, 10) - 1;
+        if (options[idx]) {
+          handleSelect(options[idx]);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [revealed, answering, loadingOptions, options]);
+
   const getOptionStyle = (option: QuizOption) => {
     if (!revealed) {
       return isEn

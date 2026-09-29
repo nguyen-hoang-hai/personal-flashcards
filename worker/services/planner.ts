@@ -39,6 +39,9 @@ export function buildStudyPlan(
     (c) => activeDeckIds.includes(c.deck_id) && c.status !== 'suspended'
   );
 
+  const nowTime = now.getTime();
+  const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).getTime();
+
   // Quiz Mode (Trắc nghiệm): Ôn lại toàn bộ các từ vựng đã học
   if (config.mode === 'quiz') {
     const learnedCards = eligible.filter((c) => c.status !== 'new');
@@ -92,9 +95,6 @@ export function buildStudyPlan(
     return applyGapSpacing(pool, config.siblingGap, config.deckGap);
   }
 
-  const nowTime = now.getTime();
-  const endOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).getTime();
-
   const learningDue: CandidateCard[] = [];
   const overdue: CandidateCard[] = [];
   const dueToday: CandidateCard[] = [];
@@ -121,16 +121,12 @@ export function buildStudyPlan(
     }
   }
 
-  // Strict Review-First Policy:
-  // Bắt buộc phải ôn tập hết các từ cần ôn (totalDueCount === 0) thì mới cho phép học từ mới!
-  // Yêu cầu 2: Mỗi lần học từ mới là tối đa 10 từ!
-  const totalDueCount = learningDue.length + overdue.length + dueToday.length;
-  let allowedNewVocab = 0;
-  if (totalDueCount === 0) {
-    allowedNewVocab = Math.min(10, config.maxNewVocabulary);
-  }
+  // Phần học từ mới là chung với phần ôn tập lại:
+  // Thẻ cần ôn xếp trước (làm trắc nghiệm), sau đó nối tiếp từ mới (lật flashcard)
+  // Mỗi lần học từ mới là tối đa 10 từ!
+  const allowedNewVocab = Math.min(10, config.maxNewVocabulary || 10);
 
-  // Select new vocabulary up to allowedNewVocab (chỉ khi không còn thẻ nào cần ôn)
+  // Select new vocabulary up to allowedNewVocab
   const selectedNewCards: CandidateCard[] = [];
   let vocabCount = 0;
   for (const [, cards] of newCardsByVocab) {
@@ -143,16 +139,17 @@ export function buildStudyPlan(
   const shuffledDueToday = controlledInterleave(dueToday);
   const shuffledNewCards = controlledInterleave(selectedNewCards);
 
-  // Combine by priority
-  const queue = [
+  // Combine by priority: Thẻ cần ôn xếp trước hoàn toàn, sau đó mới nối tiếp các thẻ từ mới!
+  const dueCards = [
     ...learningDue,
     ...overdue,
     ...shuffledDueToday,
-    ...shuffledNewCards,
   ];
 
-  // Apply sibling gap and deck gap
-  return applyGapSpacing(queue, config.siblingGap, config.deckGap);
+  const dueQueue = applyGapSpacing(dueCards, config.siblingGap, config.deckGap);
+  const newQueue = applyGapSpacing(shuffledNewCards, config.siblingGap, config.deckGap);
+
+  return [...dueQueue, ...newQueue];
 }
 
 function controlledInterleave(cards: CandidateCard[]): CandidateCard[] {
