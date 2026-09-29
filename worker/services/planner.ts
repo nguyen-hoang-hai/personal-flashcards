@@ -39,7 +39,7 @@ export function buildStudyPlan(
     (c) => activeDeckIds.includes(c.deck_id) && c.status !== 'suspended'
   );
 
-  // Cram Mode (Ôn tập sớm / Luyện tập tự do)
+  // Cram Mode (Ôn tập sớm / Luyện tập tự do các từ đã học)
   if (config.mode === 'cram') {
     const learnedCards = eligible.filter((c) => c.status !== 'new');
     learnedCards.sort((a, b) => {
@@ -47,9 +47,9 @@ export function buildStudyPlan(
       const bDue = b.due_at ? new Date(b.due_at).getTime() : 0;
       return aDue - bDue;
     });
-    const pool = learnedCards.length >= config.sessionSize 
+    const pool = learnedCards.length > 0 
       ? learnedCards.slice(0, config.sessionSize) 
-      : [...learnedCards, ...eligible.filter((c) => c.status === 'new').slice(0, config.sessionSize - learnedCards.length)];
+      : eligible.filter((c) => c.status === 'new').slice(0, config.sessionSize);
     return applyGapSpacing(pool, config.siblingGap, config.deckGap);
   }
 
@@ -64,7 +64,7 @@ export function buildStudyPlan(
   for (const card of eligible) {
     if (card.status === 'learning') {
       const due = card.due_at ? new Date(card.due_at).getTime() : 0;
-      if (due <= nowTime) {
+      if (due <= endOfToday) {
         learningDue.push(card);
       }
     } else if (card.status === 'review' || card.status === 'mastered') {
@@ -82,16 +82,15 @@ export function buildStudyPlan(
     }
   }
 
-  // Backlog control
+  // Strict Review-First Policy:
+  // Bắt buộc phải ôn tập hết các từ cần ôn (totalDueCount === 0) thì mới cho phép học từ mới!
   const totalDueCount = learningDue.length + overdue.length + dueToday.length;
-  let allowedNewVocab = config.maxNewVocabulary;
-  if (totalDueCount > 50) {
-    allowedNewVocab = 0;
-  } else if (totalDueCount > 30) {
-    allowedNewVocab = Math.floor(config.maxNewVocabulary / 2);
+  let allowedNewVocab = 0;
+  if (totalDueCount === 0) {
+    allowedNewVocab = config.maxNewVocabulary;
   }
 
-  // Select new vocabulary up to allowedNewVocab
+  // Select new vocabulary up to allowedNewVocab (chỉ khi không còn thẻ nào cần ôn)
   const selectedNewCards: CandidateCard[] = [];
   let vocabCount = 0;
   for (const [, cards] of newCardsByVocab) {

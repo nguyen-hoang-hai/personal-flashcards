@@ -12,7 +12,9 @@ export async function handleDeckRoutes(
   // GET /api/decks?language=en
   if (path === '/api/decks' && method === 'GET') {
     const lang = url.searchParams.get('language') || 'en';
-    const now = new Date().toISOString();
+    const endOfDay = new Date();
+    endOfDay.setUTCHours(23, 59, 59, 999);
+    const endOfDayIso = endOfDay.toISOString();
 
     const query = `
       SELECT 
@@ -42,7 +44,7 @@ export async function handleDeckRoutes(
     `;
 
     const { results } = await env.DB.prepare(query)
-      .bind(now, user.id, user.id, lang)
+      .bind(endOfDayIso, user.id, user.id, lang)
       .all<Deck>();
 
     return Response.json({ decks: results });

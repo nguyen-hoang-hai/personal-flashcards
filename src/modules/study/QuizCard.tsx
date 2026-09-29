@@ -107,16 +107,27 @@ export const QuizCard: React.FC<QuizCardProps> = ({ card, language, onAnswer, an
             : 'bg-gradient-to-b from-rose-950/60 to-slate-900 border-rose-800/40'
         }`}
       >
-        <div className="text-[11px] uppercase tracking-wider font-semibold text-slate-400 bg-slate-800/60 px-3 py-1 rounded-lg border border-slate-700/50">
-          {card.direction === 'en_to_vi'
-            ? 'English ➔ Chọn nghĩa đúng'
-            : card.direction === 'vi_to_en'
-            ? 'Nghĩa ➔ Chọn từ đúng'
-            : card.direction === 'ja_to_vi'
-            ? 'Kanji ➔ Chọn nghĩa đúng'
-            : card.direction === 'ja_to_reading'
-            ? 'Kanji ➔ Chọn cách đọc đúng'
-            : 'Trắc nghiệm'}
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] uppercase tracking-wider font-semibold text-slate-400 bg-slate-800/60 px-3 py-1 rounded-lg border border-slate-700/50">
+            {card.direction === 'en_to_vi'
+              ? 'English ➔ Chọn nghĩa đúng'
+              : card.direction === 'vi_to_en'
+              ? 'Nghĩa ➔ Chọn từ đúng'
+              : card.direction === 'ja_to_vi'
+              ? 'Kanji ➔ Chọn nghĩa đúng'
+              : card.direction === 'ja_to_reading'
+              ? 'Kanji ➔ Chọn cách đọc đúng'
+              : 'Trắc nghiệm'}
+          </span>
+          {card.card_status === 'new' ? (
+            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-950/80 text-emerald-300 border border-emerald-700/60">
+              Từ mới
+            </span>
+          ) : (
+            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-950/80 text-amber-300 border border-amber-700/60">
+              Ôn tập
+            </span>
+          )}
         </div>
 
         <div className={`font-black text-white tracking-tight ${language === 'ja' ? 'kanji-text text-5xl sm:text-6xl' : 'text-4xl sm:text-5xl'}`}>

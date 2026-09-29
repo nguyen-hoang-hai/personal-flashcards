@@ -102,11 +102,13 @@ export async function handleLanguageRoutes(
 }
 
 async function getLanguageSummary(env: Env, userId: string, language: Language) {
-  const now = new Date().toISOString();
+  const endOfDay = new Date();
+  endOfDay.setUTCHours(23, 59, 59, 999);
+  const endOfDayIso = endOfDay.toISOString();
   const startOfDay = new Date();
-  startOfDay.setHours(0, 0, 0, 0);
+  startOfDay.setUTCHours(0, 0, 0, 0);
 
-  // Due count
+  // Due count (các thẻ cần ôn trong ngày hôm nay hoặc quá hạn)
   const dueResult = await env.DB.prepare(
     `SELECT COUNT(DISTINCT sd.id) as count
      FROM study_directions sd
@@ -118,7 +120,7 @@ async function getLanguageSummary(env: Env, userId: string, language: Language) 
        AND COALESCE(uds.study_status, 'active') = 'active'
        AND ucp.status IN ('learning', 'review', 'mastered') AND ucp.due_at <= ?`
   )
-    .bind(userId, userId, language, now)
+    .bind(userId, userId, language, endOfDayIso)
     .first<{ count: number }>();
 
   // Available new vocabulary count

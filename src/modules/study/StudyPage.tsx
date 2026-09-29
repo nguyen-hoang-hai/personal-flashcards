@@ -284,17 +284,28 @@ export const StudyPage: React.FC = () => {
               {/* FRONT FACE */}
               <div className="absolute inset-0 backface-hidden bg-gradient-to-b from-slate-850 to-slate-900 border border-slate-700/80 rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col justify-between hover:border-slate-600 transition-colors">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] uppercase tracking-wider font-semibold text-slate-400 bg-slate-800/80 px-3 py-1 rounded-lg border border-slate-700/50">
-                    {currentCard.direction === 'en_to_vi'
-                      ? 'English ➔ Nghĩa'
-                      : currentCard.direction === 'vi_to_en'
-                      ? 'Nghĩa ➔ English'
-                      : currentCard.direction === 'ja_to_vi'
-                      ? 'Kanji ➔ Nghĩa'
-                      : currentCard.direction === 'ja_to_reading'
-                      ? 'Kanji ➔ Cách đọc'
-                      : 'Thẻ từ vựng'}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] uppercase tracking-wider font-semibold text-slate-400 bg-slate-800/80 px-3 py-1 rounded-lg border border-slate-700/50">
+                      {currentCard.direction === 'en_to_vi'
+                        ? 'English ➔ Nghĩa'
+                        : currentCard.direction === 'vi_to_en'
+                        ? 'Nghĩa ➔ English'
+                        : currentCard.direction === 'ja_to_vi'
+                        ? 'Kanji ➔ Nghĩa'
+                        : currentCard.direction === 'ja_to_reading'
+                        ? 'Kanji ➔ Cách đọc'
+                        : 'Thẻ từ vựng'}
+                    </span>
+                    {currentCard.card_status === 'new' ? (
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-950/80 text-emerald-300 border border-emerald-700/60">
+                        Từ mới
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-amber-950/80 text-amber-300 border border-amber-700/60">
+                        Ôn tập
+                      </span>
+                    )}
+                  </div>
 
                   <TTSButton
                     text={language === 'ja' && currentCard.reading ? currentCard.reading : currentCard.word}

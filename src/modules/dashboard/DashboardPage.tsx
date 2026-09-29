@@ -14,6 +14,8 @@ import {
   EyeOff,
   Check,
   HelpCircle,
+  Lock,
+  RotateCcw,
 } from 'lucide-react';
 
 
@@ -176,7 +178,9 @@ export const DashboardPage: React.FC = () => {
             <p className="text-slate-500 text-sm mt-1">
               {isAllDone
                 ? 'Tuyệt vời! Bạn đã hoàn thành toàn bộ mục tiêu hôm nay. Có thể ôn tập tự do bất kỳ lúc nào.'
-                : 'Ưu tiên thẻ đến hạn ôn, kết hợp từ mới theo thuật toán Spaced Repetition.'}
+                : (summary?.dueCards || 0) > 0
+                ? `Bạn còn ${summary?.dueCards} thẻ cần ôn tập. Hãy hoàn thành hết các thẻ cần ôn trước khi mở từ mới nhé!`
+                : 'Đã hoàn thành hết thẻ cần ôn! Bạn đã sẵn sàng học các từ mới tiếp theo.'}
             </p>
           </div>
 
@@ -203,6 +207,40 @@ export const DashboardPage: React.FC = () => {
                   <span>Trắc nghiệm</span>
                 </button>
               </>
+            ) : (summary?.dueCards || 0) > 0 ? (
+              <>
+                <button
+                  onClick={() => handleStartSession(Math.min(10, summary?.dueCards || 10), 'standard', 'flashcard')}
+                  disabled={startingSession}
+                  className={`px-6 py-3.5 rounded-2xl text-white font-bold shadow-md hover:shadow-lg active:scale-95 transition-all flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed ${
+                    isEn
+                      ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-600/25'
+                      : 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/25'
+                  }`}
+                  title="Ôn tập hết các thẻ đến hạn trước khi học từ mới"
+                >
+                  <RotateCcw size={18} />
+                  <span>Ôn tập ngay ({summary?.dueCards > 10 ? '10 thẻ' : `${summary?.dueCards} thẻ`})</span>
+                </button>
+                <button
+                  onClick={() => handleStartSession(Math.min(10, summary?.dueCards || 10), 'standard', 'quiz')}
+                  disabled={startingSession}
+                  className="px-5 py-3.5 rounded-2xl bg-violet-600 hover:bg-violet-700 active:scale-95 text-white font-bold shadow-md shadow-violet-600/25 transition-all flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                  title="Ôn tập dạng trắc nghiệm 4 đáp án"
+                >
+                  <HelpCircle size={18} />
+                  <span>Trắc nghiệm ôn tập</span>
+                </button>
+                {(summary?.dueCards || 0) > 10 && (
+                  <button
+                    onClick={() => handleStartSession(20, 'standard', 'flashcard')}
+                    disabled={startingSession}
+                    className="px-4 py-3.5 rounded-2xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 font-semibold text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    Ôn 20 thẻ
+                  </button>
+                )}
+              </>
             ) : (
               <>
                 <button
@@ -215,23 +253,23 @@ export const DashboardPage: React.FC = () => {
                   }`}
                 >
                   <Play size={18} fill="currentColor" />
-                  <span>Học 10 thẻ (Quick)</span>
+                  <span>Học 10 từ mới</span>
                 </button>
                 <button
                   onClick={() => handleStartSession(10, 'standard', 'quiz')}
                   disabled={startingSession}
                   className="px-5 py-3.5 rounded-2xl bg-violet-600 hover:bg-violet-700 active:scale-95 text-white font-bold shadow-md shadow-violet-600/25 transition-all flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
-                  title="Ôn tập dạng trắc nghiệm 4 đáp án"
+                  title="Học từ mới dạng trắc nghiệm 4 đáp án"
                 >
                   <HelpCircle size={18} />
-                  <span>Trắc nghiệm</span>
+                  <span>Trắc nghiệm từ mới</span>
                 </button>
                 <button
                   onClick={() => handleStartSession(20, 'standard', 'flashcard')}
                   disabled={startingSession}
                   className="px-4 py-3.5 rounded-2xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 font-semibold text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  20 thẻ
+                  20 từ mới
                 </button>
               </>
             )}
@@ -245,7 +283,7 @@ export const DashboardPage: React.FC = () => {
             <div className="text-xs text-slate-400 font-medium">Cần ôn (Due)</div>
             <div
               className={`text-2xl sm:text-3xl font-extrabold tracking-tight ${
-                isEn ? 'text-indigo-600' : 'text-rose-600'
+                isEn ? 'text-amber-600' : 'text-rose-600'
               }`}
             >
               {loading ? (
@@ -254,6 +292,11 @@ export const DashboardPage: React.FC = () => {
                 summary?.dueCards || 0
               )}
             </div>
+            {(summary?.dueCards || 0) > 0 && (
+              <div className="text-[11px] text-amber-600 font-medium mt-0.5">
+                Cần ôn trước
+              </div>
+            )}
           </div>
           <div className="text-center sm:text-left">
             <div className="text-xs text-slate-400 font-medium">Từ mới (New)</div>
@@ -264,6 +307,16 @@ export const DashboardPage: React.FC = () => {
                 summary?.newWords || 0
               )}
             </div>
+            {(summary?.dueCards || 0) > 0 ? (
+              <div className="text-[11px] text-slate-400 flex items-center justify-center sm:justify-start gap-1 mt-0.5">
+                <Lock size={11} />
+                <span>Mở sau khi ôn xong</span>
+              </div>
+            ) : (
+              <div className="text-[11px] text-emerald-600 font-medium mt-0.5">
+                Sẵn sàng học
+              </div>
+            )}
           </div>
           <div className="text-center sm:text-left">
             <div className="text-xs text-slate-400 font-medium">Phiên xong hôm nay</div>
