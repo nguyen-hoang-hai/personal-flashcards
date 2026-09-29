@@ -30,6 +30,7 @@ export const DashboardPage: React.FC = () => {
   const [summary, setSummary] = useState<any>(null);
   const [startingSession, setStartingSession] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sessionSize, setSessionSize] = useState<number>(10);
 
   const isEn = language === 'en';
   const themeColor = isEn ? 'indigo' : 'rose';
@@ -166,8 +167,8 @@ export const DashboardPage: React.FC = () => {
 
       {/* Hero Due Summary Card */}
       <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-sm mb-8">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-100">
-          <div>
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-slate-100">
+          <div className="max-w-xl">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold mb-2">
               <Sparkles size={13} className={isEn ? 'text-indigo-600' : 'text-rose-600'} />
               <span>Không gian {isEn ? 'English' : '日本語'}</span>
@@ -175,7 +176,7 @@ export const DashboardPage: React.FC = () => {
             <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
               Kế hoạch học hôm nay
             </h1>
-            <p className="text-slate-500 text-sm mt-1">
+            <p className="text-slate-500 text-sm mt-1.5 leading-relaxed">
               {isAllDone
                 ? 'Tuyệt vời! Bạn đã hoàn thành toàn bộ mục tiêu hôm nay. Có thể ôn tập tự do bất kỳ lúc nào.'
                 : (summary?.dueCards || 0) > 0
@@ -184,148 +185,177 @@ export const DashboardPage: React.FC = () => {
             </p>
           </div>
 
-          {/* Quick Action Study Buttons */}
-          <div className="flex flex-wrap items-center gap-3">
-            {isAllDone ? (
-              <>
-                <button
-                  onClick={() => handleStartSession(10, 'cram', 'flashcard')}
-                  disabled={startingSession}
-                  className="px-6 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold shadow-md shadow-emerald-600/25 transition-all flex items-center gap-2"
-                  title="Ôn tập tự do các thẻ đã học bất cứ lúc nào"
-                >
-                  <Sparkles size={18} />
-                  <span>Luyện tập tự do (Cram)</span>
-                </button>
-                <button
-                  onClick={() => handleStartSession(10, 'cram', 'quiz')}
-                  disabled={startingSession}
-                  className="px-5 py-3.5 rounded-2xl bg-violet-600 hover:bg-violet-700 active:scale-95 text-white font-bold shadow-md shadow-violet-600/25 transition-all flex items-center gap-2"
-                  title="Luyện tập dạng trắc nghiệm 4 đáp án"
-                >
-                  <HelpCircle size={18} />
-                  <span>Trắc nghiệm</span>
-                </button>
-              </>
-            ) : (summary?.dueCards || 0) > 0 ? (
-              <>
-                <button
-                  onClick={() => handleStartSession(Math.min(10, summary?.dueCards || 10), 'standard', 'flashcard')}
-                  disabled={startingSession}
-                  className={`px-6 py-3.5 rounded-2xl text-white font-bold shadow-md hover:shadow-lg active:scale-95 transition-all flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed ${
-                    isEn
-                      ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-600/25'
-                      : 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/25'
-                  }`}
-                  title="Ôn tập hết các thẻ đến hạn trước khi học từ mới"
-                >
-                  <RotateCcw size={18} />
-                  <span>Ôn tập ngay ({summary?.dueCards > 10 ? '10 thẻ' : `${summary?.dueCards} thẻ`})</span>
-                </button>
-                <button
-                  onClick={() => handleStartSession(Math.min(10, summary?.dueCards || 10), 'standard', 'quiz')}
-                  disabled={startingSession}
-                  className="px-5 py-3.5 rounded-2xl bg-violet-600 hover:bg-violet-700 active:scale-95 text-white font-bold shadow-md shadow-violet-600/25 transition-all flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
-                  title="Ôn tập dạng trắc nghiệm 4 đáp án"
-                >
-                  <HelpCircle size={18} />
-                  <span>Trắc nghiệm ôn tập</span>
-                </button>
-                {(summary?.dueCards || 0) > 10 && (
+          {/* Quick Action Study Box - Perfectly Balanced */}
+          <div className="flex flex-col items-start lg:items-end gap-3 shrink-0">
+            {/* Primary Study Actions - Symmetrical grid of 2 buttons */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full sm:w-auto">
+              {isAllDone ? (
+                <>
                   <button
-                    onClick={() => handleStartSession(20, 'standard', 'flashcard')}
+                    onClick={() => handleStartSession(sessionSize, 'cram', 'flashcard')}
                     disabled={startingSession}
-                    className="px-4 py-3.5 rounded-2xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 font-semibold text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="h-12 px-6 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold shadow-md shadow-emerald-600/25 transition-all flex items-center justify-center gap-2 min-w-[170px]"
+                    title="Ôn tập tự do các thẻ đã học bất cứ lúc nào"
                   >
-                    Ôn 20 thẻ
+                    <Sparkles size={18} />
+                    <span>Luyện tự do ({sessionSize})</span>
                   </button>
-                )}
-              </>
-            ) : (
-              <>
+                  <button
+                    onClick={() => handleStartSession(sessionSize, 'cram', 'quiz')}
+                    disabled={startingSession}
+                    className="h-12 px-6 rounded-2xl bg-violet-600 hover:bg-violet-700 active:scale-95 text-white font-bold shadow-md shadow-violet-600/25 transition-all flex items-center justify-center gap-2 min-w-[170px]"
+                    title="Luyện tập dạng trắc nghiệm 4 đáp án"
+                  >
+                    <HelpCircle size={18} />
+                    <span>Trắc nghiệm ({sessionSize})</span>
+                  </button>
+                </>
+              ) : (summary?.dueCards || 0) > 0 ? (
+                <>
+                  <button
+                    onClick={() => handleStartSession(sessionSize, 'standard', 'flashcard')}
+                    disabled={startingSession}
+                    className={`h-12 px-6 rounded-2xl text-white font-bold shadow-md hover:shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 min-w-[170px] disabled:opacity-40 disabled:cursor-not-allowed ${
+                      isEn
+                        ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-600/25'
+                        : 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/25'
+                    }`}
+                    title="Ôn tập thẻ đến hạn theo dạng Flashcard"
+                  >
+                    <RotateCcw size={18} />
+                    <span>Ôn tập ({sessionSize} thẻ)</span>
+                  </button>
+                  <button
+                    onClick={() => handleStartSession(sessionSize, 'standard', 'quiz')}
+                    disabled={startingSession}
+                    className="h-12 px-6 rounded-2xl bg-violet-600 hover:bg-violet-700 active:scale-95 text-white font-bold shadow-md shadow-violet-600/25 transition-all flex items-center justify-center gap-2 min-w-[170px] disabled:opacity-40 disabled:cursor-not-allowed"
+                    title="Ôn tập dạng trắc nghiệm 4 đáp án"
+                  >
+                    <HelpCircle size={18} />
+                    <span>Trắc nghiệm ({sessionSize})</span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => handleStartSession(sessionSize, 'standard', 'flashcard')}
+                    disabled={startingSession}
+                    className={`h-12 px-6 rounded-2xl text-white font-bold shadow-md hover:shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 min-w-[170px] disabled:opacity-40 disabled:cursor-not-allowed ${
+                      isEn
+                        ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/25'
+                        : 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/25'
+                    }`}
+                  >
+                    <Play size={18} fill="currentColor" />
+                    <span>Học từ mới ({sessionSize})</span>
+                  </button>
+                  <button
+                    onClick={() => handleStartSession(sessionSize, 'standard', 'quiz')}
+                    disabled={startingSession}
+                    className="h-12 px-6 rounded-2xl bg-violet-600 hover:bg-violet-700 active:scale-95 text-white font-bold shadow-md shadow-violet-600/25 transition-all flex items-center justify-center gap-2 min-w-[170px] disabled:opacity-40 disabled:cursor-not-allowed"
+                    title="Học từ mới dạng trắc nghiệm 4 đáp án"
+                  >
+                    <HelpCircle size={18} />
+                    <span>Trắc nghiệm ({sessionSize})</span>
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* Session Size Segmented Toggle */}
+            <div className="flex items-center gap-2 text-xs text-slate-500 self-center lg:self-end">
+              <span className="font-medium">Số thẻ mỗi phiên:</span>
+              <div className="bg-slate-100 p-0.5 rounded-xl flex items-center gap-1 border border-slate-200/80">
                 <button
-                  onClick={() => handleStartSession(10, 'standard', 'flashcard')}
-                  disabled={startingSession}
-                  className={`px-6 py-3.5 rounded-2xl text-white font-bold shadow-md hover:shadow-lg active:scale-95 transition-all flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed ${
-                    isEn
-                      ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/25'
-                      : 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/25'
+                  onClick={() => setSessionSize(10)}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                    sessionSize === 10
+                      ? 'bg-white text-slate-900 shadow-xs'
+                      : 'text-slate-500 hover:text-slate-800'
                   }`}
                 >
-                  <Play size={18} fill="currentColor" />
-                  <span>Học 10 từ mới</span>
+                  10 thẻ
                 </button>
                 <button
-                  onClick={() => handleStartSession(10, 'standard', 'quiz')}
-                  disabled={startingSession}
-                  className="px-5 py-3.5 rounded-2xl bg-violet-600 hover:bg-violet-700 active:scale-95 text-white font-bold shadow-md shadow-violet-600/25 transition-all flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
-                  title="Học từ mới dạng trắc nghiệm 4 đáp án"
+                  onClick={() => setSessionSize(20)}
+                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                    sessionSize === 20
+                      ? 'bg-white text-slate-900 shadow-xs'
+                      : 'text-slate-500 hover:text-slate-800'
+                  }`}
                 >
-                  <HelpCircle size={18} />
-                  <span>Trắc nghiệm từ mới</span>
+                  20 thẻ
                 </button>
-                <button
-                  onClick={() => handleStartSession(20, 'standard', 'flashcard')}
-                  disabled={startingSession}
-                  className="px-4 py-3.5 rounded-2xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 font-semibold text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  20 từ mới
-                </button>
-              </>
-            )}
+              </div>
+            </div>
           </div>
-
         </div>
 
-        {/* Counter Pills */}
-        <div className="grid grid-cols-3 gap-4 pt-6">
-          <div className="text-center sm:text-left">
-            <div className="text-xs text-slate-400 font-medium">Cần ôn (Due)</div>
+        {/* Counter Cards - 3 Symmetrical Stat Blocks */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-6">
+          {/* Card 1: Due */}
+          <div className="bg-slate-50/70 border border-slate-100 rounded-2xl p-4 flex flex-col justify-between">
+            <div className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Cần ôn (Due)</div>
             <div
-              className={`text-2xl sm:text-3xl font-extrabold tracking-tight ${
+              className={`text-2xl sm:text-3xl font-extrabold tracking-tight my-1 ${
                 isEn ? 'text-amber-600' : 'text-rose-600'
               }`}
             >
               {loading ? (
-                <div className="h-8 w-16 bg-slate-200 rounded-lg animate-pulse mt-1" />
+                <div className="h-8 w-16 bg-slate-200 rounded-lg animate-pulse" />
               ) : (
                 summary?.dueCards || 0
               )}
             </div>
-            {(summary?.dueCards || 0) > 0 && (
-              <div className="text-[11px] text-amber-600 font-medium mt-0.5">
-                Cần ôn trước
+            {(summary?.dueCards || 0) > 0 ? (
+              <div className="inline-flex items-center gap-1 text-[11px] text-amber-700 font-semibold bg-amber-100/60 px-2 py-0.5 rounded-md w-fit">
+                <RotateCcw size={12} />
+                <span>Cần hoàn thành trước</span>
+              </div>
+            ) : (
+              <div className="inline-flex items-center gap-1 text-[11px] text-emerald-700 font-semibold bg-emerald-100/60 px-2 py-0.5 rounded-md w-fit">
+                <Check size={12} />
+                <span>Đã ôn xong hôm nay</span>
               </div>
             )}
           </div>
-          <div className="text-center sm:text-left">
-            <div className="text-xs text-slate-400 font-medium">Từ mới (New)</div>
-            <div className="text-2xl sm:text-3xl font-extrabold text-slate-800 tracking-tight">
+
+          {/* Card 2: New */}
+          <div className="bg-slate-50/70 border border-slate-100 rounded-2xl p-4 flex flex-col justify-between">
+            <div className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Từ mới (New)</div>
+            <div className="text-2xl sm:text-3xl font-extrabold text-slate-800 tracking-tight my-1">
               {loading ? (
-                <div className="h-8 w-16 bg-slate-200 rounded-lg animate-pulse mt-1" />
+                <div className="h-8 w-16 bg-slate-200 rounded-lg animate-pulse" />
               ) : (
                 summary?.newWords || 0
               )}
             </div>
             {(summary?.dueCards || 0) > 0 ? (
-              <div className="text-[11px] text-slate-400 flex items-center justify-center sm:justify-start gap-1 mt-0.5">
-                <Lock size={11} />
+              <div className="inline-flex items-center gap-1 text-[11px] text-slate-500 font-medium bg-slate-200/60 px-2 py-0.5 rounded-md w-fit">
+                <Lock size={12} />
                 <span>Mở sau khi ôn xong</span>
               </div>
             ) : (
-              <div className="text-[11px] text-emerald-600 font-medium mt-0.5">
-                Sẵn sàng học
+              <div className="inline-flex items-center gap-1 text-[11px] text-emerald-700 font-semibold bg-emerald-100/60 px-2 py-0.5 rounded-md w-fit">
+                <Sparkles size={12} />
+                <span>Sẵn sàng học ngay</span>
               </div>
             )}
           </div>
-          <div className="text-center sm:text-left">
-            <div className="text-xs text-slate-400 font-medium">Phiên xong hôm nay</div>
-            <div className="text-2xl sm:text-3xl font-extrabold text-emerald-600 tracking-tight">
+
+          {/* Card 3: Completed */}
+          <div className="bg-slate-50/70 border border-slate-100 rounded-2xl p-4 flex flex-col justify-between">
+            <div className="text-xs text-slate-400 font-semibold uppercase tracking-wider">Phiên xong hôm nay</div>
+            <div className="text-2xl sm:text-3xl font-extrabold text-emerald-600 tracking-tight my-1">
               {loading ? (
-                <div className="h-8 w-16 bg-slate-200 rounded-lg animate-pulse mt-1" />
+                <div className="h-8 w-16 bg-slate-200 rounded-lg animate-pulse" />
               ) : (
                 summary?.sessionsCompletedToday || 0
               )}
+            </div>
+            <div className="inline-flex items-center gap-1 text-[11px] text-slate-500 font-medium bg-slate-200/60 px-2 py-0.5 rounded-md w-fit">
+              <CheckCircle2 size={12} className="text-emerald-600" />
+              <span>Tiến độ hàng ngày</span>
             </div>
           </div>
         </div>
