@@ -186,11 +186,9 @@ export const DashboardPage: React.FC = () => {
             <p className="text-slate-500 text-sm mt-1.5 leading-relaxed">
               {isAllDone
                 ? 'Tuyệt vời! Bạn đã hoàn thành toàn bộ kho từ vựng. Bạn có thể làm trắc nghiệm ôn lại bất kỳ lúc nào.'
-                : dueCount > 0 && newCount > 0
-                ? `Phiên học kết hợp: Ôn tập trắc nghiệm ${dueCount} từ trước ➔ Sau đó học tiếp 10 từ mới bằng Flashcard.`
                 : dueCount > 0
-                ? `Bạn còn ${dueCount} thẻ cần ôn tập bằng hình thức trắc nghiệm 4 đáp án.`
-                : 'Đã hoàn thành ôn tập hôm nay! Sẵn sàng học 10 từ mới tiếp theo bằng Flashcard.'}
+                ? `Bạn có ${dueCount} từ cần ôn tập. Ôn tập trắc nghiệm xong sẽ học tiếp 10 từ mới bằng Flashcard.`
+                : 'Đã hoàn thành hết bài ôn tập! Bạn đã sẵn sàng học 10 từ mới tiếp theo bằng Flashcard.'}
             </p>
           </div>
 
@@ -201,21 +199,19 @@ export const DashboardPage: React.FC = () => {
               <button
                 onClick={() => handleStartSession(dueCount + (newCount > 0 ? 10 : 0), 'standard', 'flashcard')}
                 disabled={startingSession}
-                className={`h-12 px-6 rounded-2xl text-white font-bold shadow-md hover:shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2.5 min-w-[220px] ${
+                className={`h-12 px-6 rounded-2xl text-white font-bold shadow-md hover:shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2.5 min-w-[160px] ${
                   isEn
                     ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/30'
                     : 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/30'
                 }`}
-                title="Ôn tập trắc nghiệm các thẻ đến hạn trước, sau đó tự động chuyển sang học 10 từ mới bằng Flashcard"
+                title={
+                  dueCount > 0
+                    ? 'Ôn tập trắc nghiệm các từ đến hạn trước, sau đó tự động chuyển sang học 10 từ mới bằng Flashcard'
+                    : 'Học 10 từ mới tiếp theo bằng Flashcard'
+                }
               >
                 <Play size={18} fill="currentColor" />
-                <span>
-                  {dueCount > 0 && newCount > 0
-                    ? `Bắt đầu học (${dueCount} ôn + 10 mới)`
-                    : dueCount > 0
-                    ? `Ôn tập trắc nghiệm (${dueCount} từ)`
-                    : `Học 10 từ mới (Flashcard)`}
-                </span>
+                <span>{dueCount > 0 ? 'Ôn tập' : 'Học từ mới'}</span>
               </button>
             )}
 
