@@ -162,13 +162,23 @@ export const DashboardPage: React.FC = () => {
               </p>
             </div>
           </div>
-          <button
-            onClick={() => navigate(`/${language}/study`)}
-            className="w-full sm:w-auto px-5 py-2.5 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-semibold rounded-xl text-sm shadow-md transition-all flex items-center justify-center gap-2"
-          >
-            <Play size={16} fill="currentColor" />
-            <span>Tiếp tục phiên học</span>
-          </button>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <button
+              onClick={() => handleStartSession(dueCount + (newCount > 0 ? 10 : 0), 'standard', 'flashcard')}
+              disabled={startingSession}
+              className="px-4 py-2.5 bg-white hover:bg-amber-100 text-amber-900 font-semibold rounded-xl text-xs border border-amber-200 transition-all text-center"
+              title="Bỏ phiên dở này để bắt đầu phiên mới đầy đủ (Ôn tập trắc nghiệm + 10 từ mới)"
+            >
+              Bắt đầu phiên mới
+            </button>
+            <button
+              onClick={() => navigate(`/${language}/study`)}
+              className="px-5 py-2.5 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-semibold rounded-xl text-sm shadow-md transition-all flex items-center justify-center gap-2"
+            >
+              <Play size={16} fill="currentColor" />
+              <span>Tiếp tục</span>
+            </button>
+          </div>
         </div>
       )}
 

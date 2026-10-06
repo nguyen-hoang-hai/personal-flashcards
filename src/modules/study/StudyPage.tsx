@@ -77,10 +77,18 @@ export const StudyPage: React.FC = () => {
   const currentCard = cards[currentIndex];
 
   // Yêu cầu cốt lõi:
-  // 1. Lúc ôn tập: các thẻ đã học (card_status !== 'new') ôn tập bằng trắc nghiệm 4 đáp án.
-  // 2. Sau khi ôn hết: nối tiếp học từ mới (card_status === 'new') bằng thẻ lật Flashcard 3D!
-  // 3. Nếu chọn chế độ 'Trắc nghiệm toàn bộ' (studyMode === 'quiz') thì tất cả thẻ đều là trắc nghiệm.
-  const isQuizCard = studyMode === 'quiz' || (Boolean(currentCard) && currentCard.card_status !== 'new');
+  // 1. Lúc ôn tập: các thẻ đã học (card_status !== 'new') BẮT BUỘC ôn tập bằng trắc nghiệm 4 đáp án (QuizCard).
+  // 2. Học từ mới: các thẻ từ mới (card_status === 'new') BẮT BUỘC học bằng thẻ lật Flashcard 3D!
+  const isQuizCard = Boolean(currentCard) && currentCard.card_status !== 'new';
+
+  const reviewCardsCount = cards.filter((c) => c.card_status !== 'new').length;
+  const newCardsCount = cards.filter((c) => c.card_status === 'new').length;
+  const currentReviewIdx = currentCard && currentCard.card_status !== 'new'
+    ? cards.slice(0, currentIndex + 1).filter((c) => c.card_status !== 'new').length
+    : 0;
+  const currentNewIdx = currentCard && currentCard.card_status === 'new'
+    ? cards.slice(0, currentIndex + 1).filter((c) => c.card_status === 'new').length
+    : 0;
 
   // Flip card with smooth 3D transition & optional auto TTS
   const handleFlip = useCallback(() => {
@@ -151,7 +159,23 @@ export const StudyPage: React.FC = () => {
         status: 'pending',
         version: (currentCard.version || 1) + 1,
       };
-      updatedCards = [...cards, requeuedCard];
+
+      if (currentCard.card_status !== 'new') {
+        // Thẻ ôn tập bị sai: chèn lại vào cuối phần ôn tập (TRƯỚC thẻ từ mới đầu tiên)
+        const firstNewIdx = cards.findIndex((c, i) => i > currentIndex && c.card_status === 'new');
+        if (firstNewIdx !== -1) {
+          updatedCards = [
+            ...cards.slice(0, firstNewIdx),
+            requeuedCard,
+            ...cards.slice(firstNewIdx),
+          ];
+        } else {
+          updatedCards = [...cards, requeuedCard];
+        }
+      } else {
+        // Thẻ từ mới bị sai: chèn vào cuối phiên học
+        updatedCards = [...cards, requeuedCard];
+      }
       setCards(updatedCards);
     }
 
@@ -229,12 +253,18 @@ export const StudyPage: React.FC = () => {
             {isQuizCard ? (
               <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-violet-950/80 text-violet-300 border border-violet-700/60 flex items-center gap-1 shadow-xs">
                 <HelpCircle size={12} />
-                <span>Trắc nghiệm ôn tập</span>
+                <span>
+                  Trắc nghiệm ôn tập
+                  {reviewCardsCount > 0 ? ` (${currentReviewIdx}/${reviewCardsCount})` : ''}
+                </span>
               </span>
             ) : (
               <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-950/80 text-emerald-300 border border-emerald-700/60 flex items-center gap-1 shadow-xs">
                 <Sparkles size={12} />
-                <span>Học từ mới (Flashcard)</span>
+                <span>
+                  Học từ mới (Flashcard)
+                  {newCardsCount > 0 ? ` (${currentNewIdx}/${newCardsCount})` : ''}
+                </span>
               </span>
             )}
           </div>
@@ -279,6 +309,16 @@ export const StudyPage: React.FC = () => {
           <div className="bg-amber-500/20 border border-amber-500/40 text-amber-200 px-4 py-2 rounded-xl text-xs flex items-center gap-2 shadow-lg backdrop-blur-md">
             <AlertTriangle size={15} />
             <span>{conflictToast}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Thông báo chuyển giai đoạn từ ôn tập sang học từ mới */}
+      {currentCard.card_status === 'new' && reviewCardsCount > 0 && currentNewIdx === 1 && (
+        <div className="max-w-2xl mx-auto w-full px-4 pt-2 z-10 animate-card-enter">
+          <div className="bg-emerald-950/90 border border-emerald-500/50 rounded-2xl p-3 text-emerald-200 text-xs text-center flex items-center justify-center gap-2 shadow-lg backdrop-blur-md">
+            <Sparkles size={16} className="text-emerald-400 shrink-0" />
+            <span className="font-semibold">🎉 Đã hoàn thành ôn tập trắc nghiệm! Tiếp theo hãy học {newCardsCount} từ mới bằng thẻ Flashcard:</span>
           </div>
         </div>
       )}

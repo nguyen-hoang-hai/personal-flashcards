@@ -109,7 +109,11 @@ export async function handleStudyRoutes(
       mode: body.mode || 'standard',
     });
 
-    const sessionCards = plannedQueue.slice(0, sessionSize);
+    // Ở chế độ standard, giữ trọn vẹn toàn bộ plannedQueue (gồm TẤT CẢ các thẻ cần ôn + tối đa 10 từ mới).
+    // Tuyệt đối không cắt hàng đợi bằng slice(0, sessionSize) vì sẽ làm mất các thẻ từ mới ở đuôi!
+    const sessionCards = body.mode === 'quiz'
+      ? plannedQueue.slice(0, sessionSize)
+      : plannedQueue;
 
     if (sessionCards.length === 0) {
       if (body.mode === 'quiz') {
